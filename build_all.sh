@@ -6,7 +6,7 @@ set -e
 
 MAJOR=25
 MINOR=11
-PATCH=21
+PATCH=22
 VERSION="${MAJOR}.${MINOR}.${PATCH}"
 
 # Color output

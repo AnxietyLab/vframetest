@@ -1,6 +1,6 @@
 MAJOR=25
 MINOR=11
-PATCH=21
+PATCH=22
 CFLAGS+=-std=c99 -O2 -Wall -Werror -Wpedantic -pedantic-errors -DMAJOR=$(MAJOR) -DMINOR=$(MINOR) -DPATCH=$(PATCH)
 LDFLAGS+=-pthread
 HEADERS := $(wildcard *.h)
