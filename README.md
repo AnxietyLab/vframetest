@@ -1,5 +1,7 @@
 # vframetest
 
+[![CI/CD](https://github.com/ssotoa70/vframetest/actions/workflows/ci.yml/badge.svg)](https://github.com/ssotoa70/vframetest/actions/workflows/ci.yml)
+
 Professional media frame I/O benchmark and testing tool for cross-platform storage performance evaluation.
 
 **vframetest** is a high-performance benchmarking utility designed to accurately measure disk I/O performance when writing and reading media frames. Perfect for validating storage subsystems, video workflows, and data center configurations.
@@ -140,6 +142,20 @@ vframetest -w FULLHD-24bit -n 500 -t 4 --histogram test-data
 - `docs/LINUX.md` - Linux installation and usage guide
 - `docs/WINDOWS.md` - Windows installation and usage guide
 - `BUILD.md` - Building from source for all platforms
+
+## CI/CD Pipeline
+
+This project uses GitHub Actions for continuous integration:
+
+- **Build**: Compiles on macOS (universal binary) and Linux (x86_64)
+- **Test**: Runs unit tests on all platforms
+- **Release**: Automatically creates releases with binaries when tags are pushed
+
+Releases are created automatically when you push a version tag:
+```bash
+git tag -a v25.11.22 -m "Release v25.11.22"
+git push origin v25.11.22
+```
 
 ## Performance Tips
 

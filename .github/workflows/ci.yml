@@ -1,0 +1,121 @@
+name: CI/CD
+
+on:
+  push:
+    branches: [main]
+    tags: ['v*']
+  pull_request:
+    branches: [main]
+
+jobs:
+  build-macos:
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Build for macOS (native)
+        run: |
+          make clean
+          make
+          ./build/vframetest --version
+
+      - name: Build Universal Binary
+        run: |
+          # Build arm64
+          make clean
+          CFLAGS="-arch arm64 -std=c99 -O2 -Wall -Werror -Wpedantic -pedantic-errors -DMAJOR=25 -DMINOR=11 -DPATCH=21" \
+          LDFLAGS="-arch arm64 -pthread" make
+          mv build/vframetest build/vframetest-arm64
+
+          # Build x86_64
+          make clean
+          CFLAGS="-arch x86_64 -std=c99 -O2 -Wall -Werror -Wpedantic -pedantic-errors -DMAJOR=25 -DMINOR=11 -DPATCH=21" \
+          LDFLAGS="-arch x86_64 -pthread" make
+          mv build/vframetest build/vframetest-x86_64
+
+          # Create universal binary
+          lipo -create -output build/vframetest-macos-universal build/vframetest-arm64 build/vframetest-x86_64
+
+          # Verify
+          file build/vframetest-macos-universal
+
+      - name: Run tests
+        run: make test
+
+      - name: Upload macOS artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: vframetest-macos
+          path: |
+            build/vframetest-macos-universal
+            build/vframetest-arm64
+            build/vframetest-x86_64
+
+  build-linux:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install dependencies
+        run: sudo apt-get update && sudo apt-get install -y build-essential
+
+      - name: Build for Linux
+        run: |
+          make clean
+          make
+          ./build/vframetest --version
+
+      - name: Run tests
+        run: make test
+
+      - name: Upload Linux artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: vframetest-linux
+          path: build/vframetest
+
+  release:
+    needs: [build-macos, build-linux]
+    runs-on: ubuntu-latest
+    if: startsWith(github.ref, 'refs/tags/v')
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Download macOS artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: vframetest-macos
+          path: artifacts/macos
+
+      - name: Download Linux artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: vframetest-linux
+          path: artifacts/linux
+
+      - name: Prepare release assets
+        run: |
+          VERSION=${GITHUB_REF#refs/tags/v}
+          mkdir -p release
+
+          # macOS binaries
+          cp artifacts/macos/vframetest-macos-universal release/vframetest-${VERSION}-macos-universal
+          cp artifacts/macos/vframetest-arm64 release/vframetest-${VERSION}-macos-arm64
+          cp artifacts/macos/vframetest-x86_64 release/vframetest-${VERSION}-macos-x86_64
+
+          # Linux binary
+          cp artifacts/linux/vframetest release/vframetest-${VERSION}-linux-x86_64
+
+          # Make executable
+          chmod +x release/*
+
+          # Generate checksums
+          cd release && shasum -a 256 * > checksums.txt
+
+      - name: Create Release
+        uses: softprops/action-gh-release@v1
+        with:
+          files: release/*
+          generate_release_notes: true
