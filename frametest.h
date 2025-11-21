@@ -54,6 +54,7 @@ typedef struct opts_t {
 	unsigned int random : 1;
 	unsigned int csv : 1;
 	unsigned int no_csv_header : 1;
+	unsigned int json : 1;
 	unsigned int times : 1;
 	unsigned int frametimes : 1;
 	unsigned int histogram : 1;

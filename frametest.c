@@ -185,9 +185,15 @@ int run_test_threads(const platform_t *platform, const char *tst,
 	}
 	tres.time_taken_ns = timing_elapsed(start);
 	if (!res) {
-		if (opts->csv)
+		if (opts->json) {
+			if (!opts->no_csv_header)
+				print_header_json();
+			print_results_json(tst, opts, &tres);
+			if (!opts->no_csv_header)
+				print_footer_json();
+		} else if (opts->csv) {
 			print_results_csv(tst, opts, &tres);
-		else {
+		} else {
 			print_results(tst, opts, &tres);
 			if (opts->histogram)
 				print_histogram(&tres);
@@ -267,7 +273,7 @@ int run_tests(opts_t *opts)
 		}
 		opts->profile = opts->frm->profile;
 	}
-	if (!opts->csv)
+	if (!opts->csv && !opts->json)
 		printf("Profile: %s\n", opts->profile.name);
 
 	if (opts->csv && !opts->no_csv_header)
@@ -418,6 +424,7 @@ static struct option long_opts[] = {
 	{ "reverse", no_argument, 0, 'v' },
 	{ "random", no_argument, 0, 'm' },
 	{ "csv", no_argument, 0, 'c' },
+	{ "json", no_argument, 0, 'j' },
 	{ "no-csv-header", no_argument, 0, 0 },
 	{ "header", required_argument, 0, 0 },
 	{ "times", no_argument, 0, 0 },
@@ -442,6 +449,7 @@ static struct long_opt_desc long_opt_descs[] = {
 	{ "reverse", "Access files in reverse order" },
 	{ "random", "Access files in random order" },
 	{ "csv", "Output results in CSV format" },
+	{ "json", "Output results in JSON format" },
 	{ "no-csv-header", "Do not print CSV header" },
 	{ "header", "Frame header size (default 64k)" },
 	{ "times", "Show breakdown of completion times (open/io/close)" },
@@ -529,6 +537,9 @@ int main(int argc, char **argv)
 			return 1;
 		case 'c':
 			opts.csv = 1;
+			break;
+		case 'j':
+			opts.json = 1;
 			break;
 		case 'v':
 			opts.reverse = 1;

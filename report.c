@@ -179,3 +179,65 @@ void print_results_csv(const char *tcase, const opts_t *opts,
 	printf("\n");
 	print_frame_times(res, opts);
 }
+
+void print_header_json(void)
+{
+	printf("{\n  \"results\": [\n");
+}
+
+void print_footer_json(void)
+{
+	printf("  ]\n}\n");
+}
+
+void print_results_json(const char *tcase, const opts_t *opts,
+		       const test_result_t *res)
+{
+	uint64_t min = SIZE_MAX;
+	uint64_t max = 0;
+	uint64_t total = 0;
+	size_t i;
+
+	if (!res)
+		return;
+	if (!res->time_taken_ns)
+		return;
+
+	printf("    {\n");
+	printf("      \"case\": \"%s\",\n", tcase);
+	printf("      \"profile\": \"%s\",\n", opts->profile.name);
+	printf("      \"threads\": %zu,\n", opts->threads);
+	printf("      \"frames\": %" PRIu64 ",\n", res->frames_written);
+	printf("      \"bytes\": %" PRIu64 ",\n", res->bytes_written);
+	printf("      \"time_ns\": %" PRIu64 ",\n", res->time_taken_ns);
+	printf("      \"fps\": %lf,\n",
+	       (double)res->frames_written * SEC_IN_NS / res->time_taken_ns);
+	printf("      \"bps\": %lf,\n",
+	       (double)res->bytes_written * SEC_IN_NS / res->time_taken_ns);
+	printf("      \"mibps\": %lf,\n",
+	       (double)res->bytes_written * SEC_IN_NS / (1024 * 1024) /
+	       res->time_taken_ns);
+
+	/* Completion times */
+	if (res->completion) {
+		for (i = 0; i < res->frames_written; i++) {
+			uint64_t val = res->completion[i].frame -
+				       res->completion[i].start;
+			if (val < min)
+				min = val;
+			if (val > max)
+				max = val;
+			total += val;
+		}
+		printf("      \"completion\": {\n");
+		printf("        \"min_ms\": %lf,\n", (double)min / SEC_IN_MS);
+		printf("        \"avg_ms\": %lf,\n",
+		       (double)total / res->frames_written / SEC_IN_MS);
+		printf("        \"max_ms\": %lf\n", (double)max / SEC_IN_MS);
+		printf("      }\n");
+	} else {
+		printf("      \"completion\": null\n");
+	}
+
+	printf("    }\n");
+}

@@ -129,6 +129,54 @@ vframetest -r -n 100 --random test-data
 vframetest -w FULLHD-24bit -n 500 -t 4 --histogram test-data
 ```
 
+## Machine-Readable Output (JSON & CSV)
+
+Export results for automation and analysis:
+
+```bash
+# JSON format (pretty-printed, structured data)
+vframetest --json -w FULLHD-24bit -n 100 test-data > results.json
+
+# CSV format (comma-separated, importable to spreadsheets)
+vframetest --csv -w FULLHD-24bit -n 100 test-data > results.csv
+
+# CSV with timing breakdown
+vframetest --csv --times -w FULLHD-24bit -n 100 test-data > results_detailed.csv
+
+# Skip CSV header for appending multiple runs
+vframetest --csv --no-csv-header -w FULLHD-24bit -n 100 test-data >> results.csv
+```
+
+### JSON Output Example
+```json
+{
+  "results": [
+    {
+      "case": "write",
+      "profile": "FULLHD-24bit",
+      "threads": 1,
+      "frames": 100,
+      "bytes": 628736000,
+      "time_ns": 1234567890,
+      "fps": 81.015625,
+      "bps": 509664514.285714,
+      "mibps": 486.023430,
+      "completion": {
+        "min_ms": 5.908000,
+        "avg_ms": 12.345600,
+        "max_ms": 25.641000
+      }
+    }
+  ]
+}
+```
+
+### CSV Output Example
+```csv
+case,profile,threads,frames,bytes,time,fps,bps,mibps,fmin,favg,fmax
+"write","FULLHD-24bit",1,100,628736000,1234567890,81.015625,509664514.285714,486.023430,5908000,12345600.000000,25641000
+```
+
 ## Platform-Specific Features
 
 - **macOS**: F_NOCACHE for native direct I/O, F_FULLFSYNC for data integrity, Universal Binary support
