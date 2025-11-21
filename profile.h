@@ -51,5 +51,6 @@ profile_t profile_get_by_name(const char *name);
 profile_t profile_get_by_type(enum ProfileType prof);
 profile_t profile_get_by_index(size_t idx);
 profile_t profile_get_by_frame_size(size_t header_size, size_t size);
+profile_t profile_parse_custom(const char *str);
 
 #endif

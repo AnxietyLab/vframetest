@@ -340,11 +340,21 @@ int opt_parse_profile(opts_t *opt, const char *arg)
 	if (!arg)
 		return 1;
 
+	/* Try to get profile by name first */
 	prof = profile_get_by_name(arg);
-	if (prof.prof == PROF_INVALID)
-		return 1;
-	opt->profile = prof;
-	return 0;
+	if (prof.prof != PROF_INVALID) {
+		opt->profile = prof;
+		return 0;
+	}
+
+	/* Try to parse as custom resolution (WIDTHxHEIGHTxBITS) */
+	prof = profile_parse_custom(arg);
+	if (prof.width > 0 && prof.height > 0) {
+		opt->profile = prof;
+		return 0;
+	}
+
+	return 1;
 }
 
 static inline int parse_arg_size_t(const char *arg, size_t *res, int zero_ok)

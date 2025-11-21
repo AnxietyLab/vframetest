@@ -18,6 +18,7 @@
  * 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
+#include <stdlib.h>
 #include <string.h>
 #include "profile.h"
 
@@ -29,16 +30,27 @@ static profile_t profiles[] = {
 	{ "invalid", PROF_INVALID, 0, 0, 0, 0 },
 	{ "SD-32bit-cmp", PROF_SD, 720, 480, 4, 0 },
 	{ "SD-24bit", PROF_SD, 720, 480, 3, 0 },
-	{ "FULLHD-32bit-cmp", PROF_HD, 1920, 1080, 4, 0 },
+	/* HD Profiles (1280x720) */
+	{ "HD-16bit", PROF_HD, 1280, 720, 2, 0 },
 	{ "HD-24bit", PROF_HD, 1280, 720, 3, 0 },
+	{ "HD-32bit", PROF_HD, 1280, 720, 4, 0 },
+	/* Full HD Profiles (1920x1080) */
+	{ "FULLHD-32bit-cmp", PROF_FULLHD, 1920, 1080, 4, 0 },
+	{ "FULLHD-16bit", PROF_FULLHD, 1920, 1080, 2, 0 },
 	{ "FULLHD-24bit", PROF_FULLHD, 1920, 1080, 3, 0 },
+	{ "FULLHD-32bit", PROF_FULLHD, 1920, 1080, 4, 0 },
+	/* 2K Profiles */
 	{ "2K-32bit-cmp", PROF_2K, 2048, 1556, 4, 0 },
 	{ "2K-24bit", PROF_2K, 2048, 1080, 3, 0 },
+	/* 4K Profiles (3840x2160) */
 	{ "4K-32bit-cmp", PROF_4K, 4096, 3112, 4, 0 },
-	{ "4K-24bit", PROF_4K, 3840, 2160, 3, 0 },
 	{ "4K-16bit", PROF_4K, 3840, 2160, 2, 0 },
+	{ "4K-24bit", PROF_4K, 3840, 2160, 3, 0 },
 	{ "4K-32bit", PROF_4K, 3840, 2160, 4, 0 },
+	/* 8K Profiles (7680x4320) */
+	{ "8K-16bit", PROF_8K, 7680, 4320, 2, 0 },
 	{ "8K-24bit", PROF_8K, 7680, 4320, 3, 0 },
+	{ "8K-32bit", PROF_8K, 7680, 4320, 4, 0 },
 	{ "empty", PROF_CUSTOM, 0, 0, 0, 0 },
 };
 static size_t profile_cnt = sizeof(profiles) / sizeof(profiles[0]);
@@ -105,4 +117,56 @@ profile_t profile_get_by_frame_size(size_t header_size, size_t size)
 	}
 
 	return profiles[0];
+}
+
+/**
+ * Parse custom resolution in format: WIDTHxHEIGHTxBITS
+ * Examples: 1920x1080x24, 3840x2160x32, 1280x720x16
+ * Returns a custom profile with the specified resolution
+ */
+profile_t profile_parse_custom(const char *str)
+{
+	profile_t custom = { "custom", PROF_CUSTOM, 0, 0, 0, 0 };
+	char *copy, *p, *end;
+	int width = 0, height = 0, bits = 24;
+
+	if (!str)
+		return custom;
+
+	copy = strdup(str);
+	if (!copy)
+		return custom;
+
+	/* Parse width */
+	p = copy;
+	width = strtol(p, &end, 10);
+	if (end == p || *end != 'x' || width <= 0)
+		goto out;
+
+	/* Parse height */
+	p = end + 1;
+	height = strtol(p, &end, 10);
+	if (end == p || height <= 0)
+		goto out;
+
+	/* Parse bits (optional, default 24) */
+	if (*end == 'x') {
+		p = end + 1;
+		bits = strtol(p, &end, 10);
+		if (end == p || bits <= 0)
+			bits = 24;
+	}
+
+	/* Validate bits per pixel */
+	if (bits != 8 && bits != 16 && bits != 24 && bits != 32) {
+		bits = 24;
+	}
+
+	custom.width = width;
+	custom.height = height;
+	custom.bytes_per_pixel = bits / 8;
+
+out:
+	free(copy);
+	return custom;
 }

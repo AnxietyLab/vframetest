@@ -129,6 +129,59 @@ vframetest -r -n 100 --random test-data
 vframetest -w FULLHD-24bit -n 500 -t 4 --histogram test-data
 ```
 
+## Frame Profiles
+
+### Predefined Profiles
+
+Supported resolutions and bit depths:
+
+**HD (1280x720)**
+```bash
+vframetest -w HD-16bit -n 100 test-data   # 2 bytes per pixel
+vframetest -w HD-24bit -n 100 test-data   # 3 bytes per pixel
+vframetest -w HD-32bit -n 100 test-data   # 4 bytes per pixel
+```
+
+**4K (3840x2160)**
+```bash
+vframetest -w 4K-16bit -n 100 test-data   # 2 bytes per pixel
+vframetest -w 4K-24bit -n 100 test-data   # 3 bytes per pixel
+vframetest -w 4K-32bit -n 100 test-data   # 4 bytes per pixel
+```
+
+**8K (7680x4320)**
+```bash
+vframetest -w 8K-16bit -n 100 test-data   # 2 bytes per pixel
+vframetest -w 8K-24bit -n 100 test-data   # 3 bytes per pixel
+vframetest -w 8K-32bit -n 100 test-data   # 4 bytes per pixel
+```
+
+### Custom Resolutions
+
+Define your own resolution with format: `WIDTHxHEIGHTxBITS`
+
+```bash
+# 2K UHD (2560x1440, 24-bit)
+vframetest -w 2560x1440x24 -n 100 test-data
+
+# 1024x768 with 16-bit color
+vframetest -w 1024x768x16 -n 100 test-data
+
+# Custom 5K resolution (5120x2880, 32-bit)
+vframetest -w 5120x2880x32 -n 100 test-data
+
+# Custom resolution with JSON export
+vframetest --json -w 3200x1800x24 -n 100 test-data > custom.json
+
+# Multi-threaded custom resolution test
+vframetest -w 2560x1440x24 -n 500 -t 4 test-data
+```
+
+**Bit depth options:**
+- `16` = 2 bytes per pixel (RGB 5:6:5)
+- `24` = 3 bytes per pixel (RGB 8:8:8)
+- `32` = 4 bytes per pixel (RGBA 8:8:8:8)
+
 ## Machine-Readable Output (JSON & CSV)
 
 Export results for automation and analysis:
