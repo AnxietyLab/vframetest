@@ -15,9 +15,13 @@ jobs:
 
       - name: Build for macOS (native)
         run: |
+          START_TIME=$SECONDS
           make clean
           make
           ./build/vframetest --version
+          DURATION=$((SECONDS - START_TIME))
+          echo "BUILD_DURATION=${DURATION}" >> $GITHUB_ENV
+          echo "BUILD_STATUS=success" >> $GITHUB_ENV
 
       - name: Build Universal Binary
         run: |
@@ -41,6 +45,13 @@ jobs:
           # Verify
           file dist/vframetest-macos-universal
 
+      - name: Collect benchmark data
+        if: always()
+        run: |
+          chmod +x scripts/collect-benchmarks.sh
+          VERSION=$(grep '^MAJOR=' Makefile | cut -d= -f2).$(grep '^MINOR=' Makefile | cut -d= -f2).$(grep '^PATCH=' Makefile | cut -d= -f2)
+          ./scripts/collect-benchmarks.sh "v${VERSION}" "macOS" "${{ env.BUILD_STATUS }}" "${{ env.BUILD_DURATION }}"
+
       - name: Upload macOS artifacts
         uses: actions/upload-artifact@v4
         with:
@@ -49,6 +60,13 @@ jobs:
             dist/vframetest-macos-universal
             dist/vframetest-arm64
             dist/vframetest-x86_64
+
+      - name: Upload benchmark data
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: benchmark-data
+          path: dashboard/data/builds.json
 
   build-linux:
     runs-on: ubuntu-latest
@@ -60,18 +78,36 @@ jobs:
 
       - name: Build for Linux
         run: |
+          START_TIME=$SECONDS
           make clean
           make
           ./build/vframetest --version
+          DURATION=$((SECONDS - START_TIME))
+          echo "BUILD_DURATION=${DURATION}" >> $GITHUB_ENV
+          echo "BUILD_STATUS=success" >> $GITHUB_ENV
 
       - name: Run tests
         run: make test
+
+      - name: Collect benchmark data
+        if: always()
+        run: |
+          chmod +x scripts/collect-benchmarks.sh
+          VERSION=$(grep '^MAJOR=' Makefile | cut -d= -f2).$(grep '^MINOR=' Makefile | cut -d= -f2).$(grep '^PATCH=' Makefile | cut -d= -f2)
+          ./scripts/collect-benchmarks.sh "v${VERSION}" "Linux" "${{ env.BUILD_STATUS }}" "${{ env.BUILD_DURATION }}"
 
       - name: Upload Linux artifacts
         uses: actions/upload-artifact@v4
         with:
           name: vframetest-linux
           path: build/vframetest
+
+      - name: Upload benchmark data
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: benchmark-data
+          path: dashboard/data/builds.json
 
   release:
     needs: [build-macos, build-linux]

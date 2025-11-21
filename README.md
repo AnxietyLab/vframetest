@@ -150,12 +150,42 @@ This project uses GitHub Actions for continuous integration:
 - **Build**: Compiles on macOS (universal binary) and Linux (x86_64)
 - **Test**: Runs unit tests on all platforms
 - **Release**: Automatically creates releases with binaries when tags are pushed
+- **Benchmarking**: Automatically collects build performance metrics
 
 Releases are created automatically when you push a version tag:
 ```bash
 git tag -a v25.11.22 -m "Release v25.11.22"
 git push origin v25.11.22
 ```
+
+## Benchmarking Dashboard
+
+Monitor build performance and metrics with the automated benchmarking dashboard:
+
+### Features
+- 📊 Real-time build performance visualization
+- 📈 Success rates and duration trends
+- 🎯 Platform comparison (macOS vs Linux)
+- 📱 Responsive design for mobile and desktop
+
+### Viewing the Dashboard
+```bash
+# Open locally
+open dashboard/index.html
+
+# Or use HTTP server
+python3 -m http.server 8000
+# Navigate to http://localhost:8000/dashboard/
+```
+
+### Dashboard Data
+Build metrics are automatically collected in `dashboard/data/builds.json`:
+- Build duration per platform
+- Success/failure status
+- Version and commit information
+- Timestamps for historical analysis
+
+For detailed dashboard documentation, see [dashboard/README.md](dashboard/README.md)
 
 ## Performance Tips
 
