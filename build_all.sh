@@ -4,9 +4,9 @@
 
 set -e
 
-MAJOR=3025
-MINOR=10
-PATCH=2
+MAJOR=25
+MINOR=11
+PATCH=21
 VERSION="${MAJOR}.${MINOR}.${PATCH}"
 
 # Color output
