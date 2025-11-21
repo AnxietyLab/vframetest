@@ -109,8 +109,62 @@ jobs:
           name: benchmark-data
           path: dashboard/data/builds.json
 
+  build-windows:
+    runs-on: windows-latest
+    strategy:
+      matrix:
+        arch: [x86_64, i686]
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install MinGW
+        uses: msys2/setup-msys2@v2
+        with:
+          msystem: mingw64
+          update: true
+          install: >-
+            mingw-w64-x86_64-toolchain
+            mingw-w64-i686-toolchain
+            make
+
+      - name: Build for Windows (${{ matrix.arch }})
+        shell: msys2 {0}
+        run: |
+          START_TIME=$SECONDS
+          make clean
+          if [ "${{ matrix.arch }}" = "i686" ]; then
+            CROSS=i686-w64-mingw32- make
+          else
+            make
+          fi
+          ./build/vframetest.exe --version
+          DURATION=$((SECONDS - START_TIME))
+          echo "BUILD_DURATION=${DURATION}" >> $GITHUB_ENV
+          echo "BUILD_STATUS=success" >> $GITHUB_ENV
+
+      - name: Collect benchmark data
+        if: always()
+        shell: msys2 {0}
+        run: |
+          chmod +x scripts/collect-benchmarks.sh
+          VERSION=$(grep '^MAJOR=' Makefile | cut -d= -f2).$(grep '^MINOR=' Makefile | cut -d= -f2).$(grep '^PATCH=' Makefile | cut -d= -f2)
+          ./scripts/collect-benchmarks.sh "v${VERSION}" "Windows-${{ matrix.arch }}" "${{ env.BUILD_STATUS }}" "${{ env.BUILD_DURATION }}"
+
+      - name: Upload Windows artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: vframetest-windows-${{ matrix.arch }}
+          path: build/vframetest.exe
+
+      - name: Upload benchmark data
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: benchmark-data
+          path: dashboard/data/builds.json
+
   release:
-    needs: [build-macos, build-linux]
+    needs: [build-macos, build-linux, build-windows]
     runs-on: ubuntu-latest
     if: startsWith(github.ref, 'refs/tags/v')
     permissions:
@@ -130,6 +184,18 @@ jobs:
           name: vframetest-linux
           path: artifacts/linux
 
+      - name: Download Windows x86_64 artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: vframetest-windows-x86_64
+          path: artifacts/windows-x86_64
+
+      - name: Download Windows i686 artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: vframetest-windows-i686
+          path: artifacts/windows-i686
+
       - name: Prepare release assets
         run: |
           VERSION=${GITHUB_REF#refs/tags/v}
@@ -143,11 +209,15 @@ jobs:
           # Linux binary
           cp artifacts/linux/vframetest release/vframetest-${VERSION}-linux-x86_64
 
+          # Windows binaries
+          cp artifacts/windows-x86_64/vframetest.exe release/vframetest-${VERSION}-windows-x86_64.exe
+          cp artifacts/windows-i686/vframetest.exe release/vframetest-${VERSION}-windows-i686.exe
+
           # Make executable
-          chmod +x release/*
+          chmod +x release/* || true
 
           # Generate checksums
-          cd release && shasum -a 256 * > checksums.txt
+          cd release && shasum -a 256 * > checksums.txt || sha256sum * > checksums.txt
 
       - name: Create Release
         uses: softprops/action-gh-release@v1

@@ -147,10 +147,10 @@ vframetest -w FULLHD-24bit -n 500 -t 4 --histogram test-data
 
 This project uses GitHub Actions for continuous integration:
 
-- **Build**: Compiles on macOS (universal binary) and Linux (x86_64)
-- **Test**: Runs unit tests on all platforms
-- **Release**: Automatically creates releases with binaries when tags are pushed
-- **Benchmarking**: Automatically collects build performance metrics
+- **Build**: Compiles on macOS (universal binary), Linux (x86_64), and Windows (x86_64 + i686)
+- **Test**: Runs unit tests on Linux and macOS
+- **Release**: Automatically creates releases with binaries for all platforms when tags are pushed
+- **Benchmarking**: Automatically collects build performance metrics for all platforms
 
 Releases are created automatically when you push a version tag:
 ```bash
