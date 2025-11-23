@@ -19,23 +19,23 @@ Professional media frame I/O benchmark and testing tool for cross-platform stora
 
 ### macOS
 ```bash
-curl -L -O https://github.com/ssotoa70/vframetest/releases/download/v25.11.22/vframetest-macos-universal
-chmod +x vframetest-macos-universal
+curl -L -O https://github.com/ssotoa70/vframetest/releases/download/v25.11.21/vframetest-25.11.21-macos-universal
+chmod +x vframetest-25.11.21-macos-universal
 mkdir test-data
-./vframetest-macos-universal -w FULLHD-24bit -n 100 -t 4 test-data
+./vframetest-25.11.21-macos-universal -w FULLHD-24bit -n 100 -t 4 test-data
 ```
 
 ### Linux
 ```bash
-wget https://github.com/ssotoa70/vframetest/releases/download/v25.11.22/vframetest-linux-x86_64
-chmod +x vframetest-linux-x86_64
+wget https://github.com/ssotoa70/vframetest/releases/download/v25.11.21/vframetest-25.11.21-linux-x86_64
+chmod +x vframetest-25.11.21-linux-x86_64
 mkdir test-data
-./vframetest-linux-x86_64 -w FULLHD-24bit -n 100 -t 4 test-data
+./vframetest-25.11.21-linux-x86_64 -w FULLHD-24bit -n 100 -t 4 test-data
 ```
 
 ### Windows
 ```powershell
-Invoke-WebRequest -Uri "https://github.com/ssotoa70/vframetest/releases/download/v25.11.22/vframetest-windows-x86_64.exe" -OutFile "vframetest.exe"
+Invoke-WebRequest -Uri "https://github.com/ssotoa70/vframetest/releases/download/v25.11.21/vframetest-25.11.21-windows-x86_64.exe" -OutFile "vframetest.exe"
 mkdir test-data
 .\vframetest.exe -w FULLHD-24bit -n 100 -t 4 test-data
 ```
@@ -55,9 +55,9 @@ vframetest --version
 ### macOS (Manual)
 ```bash
 # Pre-built binary
-curl -L -O https://github.com/ssotoa70/vframetest/releases/download/v25.11.22/vframetest-macos-universal
-chmod +x vframetest-macos-universal
-sudo mv vframetest-macos-universal /usr/local/bin/vframetest
+curl -L -O https://github.com/ssotoa70/vframetest/releases/download/v25.11.21/vframetest-25.11.21-macos-universal
+chmod +x vframetest-25.11.21-macos-universal
+sudo mv vframetest-25.11.21-macos-universal /usr/local/bin/vframetest
 
 # Build from source
 git clone https://github.com/ssotoa70/vframetest.git
@@ -68,9 +68,9 @@ make clean && make
 ### Linux
 ```bash
 # Pre-built binary
-wget https://github.com/ssotoa70/vframetest/releases/download/v25.11.22/vframetest-linux-x86_64
-chmod +x vframetest-linux-x86_64
-sudo mv vframetest-linux-x86_64 /usr/local/bin/vframetest
+wget https://github.com/ssotoa70/vframetest/releases/download/v25.11.21/vframetest-25.11.21-linux-x86_64
+chmod +x vframetest-25.11.21-linux-x86_64
+sudo mv vframetest-25.11.21-linux-x86_64 /usr/local/bin/vframetest
 
 # Build from source (Ubuntu/Debian)
 sudo apt-get install build-essential git
@@ -89,7 +89,7 @@ make clean && make
 ### Windows
 ```powershell
 # Pre-built binary
-$url = "https://github.com/ssotoa70/vframetest/releases/download/v25.11.22/vframetest-windows-x86_64.exe"
+$url = "https://github.com/ssotoa70/vframetest/releases/download/v25.11.21/vframetest-25.11.21-windows-x86_64.exe"
 $dest = "C:\Program Files\vframetest\vframetest.exe"
 New-Item -ItemType Directory -Force -Path "C:\Program Files\vframetest"
 Invoke-WebRequest -Uri $url -OutFile $dest
