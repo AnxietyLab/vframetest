@@ -102,6 +102,16 @@ static inline int test_result_aggregate(test_result_t *dst,
 	dst->bytes_written += src->bytes_written;
 	dst->time_taken_ns += src->time_taken_ns;
 
+	/* Phase 1: Aggregate error tracking and success metrics */
+	dst->frames_failed += src->frames_failed;
+	dst->frames_succeeded += src->frames_succeeded;
+
+	/* Recalculate success rate after aggregation */
+	if (dst->frames_succeeded + dst->frames_failed > 0) {
+		dst->success_rate_percent = (dst->frames_succeeded * 100.0) /
+		                             (dst->frames_succeeded + dst->frames_failed);
+	}
+
 	return 0;
 }
 

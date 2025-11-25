@@ -206,17 +206,17 @@ int run_test_threads(const platform_t *platform, const char *tst,
 			print_results_csv(tst, opts, &tres);
 		} else {
 			print_results(tst, opts, &tres);
-			/* Phase 1: Display error summary */
-			if (tres.frames_failed > 0) {
-				fprintf(stdout, "Frames failed: %d\n", tres.frames_failed);
-				fprintf(stdout, "Frames succeeded: %d\n", tres.frames_succeeded);
-				fprintf(stdout, "Success rate: %.2f%%\n", tres.success_rate_percent);
-			}
-			/* Phase 1: Display filesystem type for remote mounts */
+			/* Phase 1: Always display error/success summary */
+			fprintf(stdout, "Frames failed: %d\n", tres.frames_failed);
+			fprintf(stdout, "Frames succeeded: %d\n", tres.frames_succeeded);
+			fprintf(stdout, "Success rate: %.2f%%\n", tres.success_rate_percent);
+			/* Phase 1: Display filesystem type and warnings */
+			const char *fs_types[] = {"LOCAL", "SMB", "NFS", "OTHER"};
+			int fs_idx = (tres.filesystem_type >= 0 && tres.filesystem_type <= 3) ? tres.filesystem_type : 3;
+			fprintf(stdout, "Filesystem: %s\n", fs_types[fs_idx]);
 			if (tres.filesystem_type != 0) {
-				const char *fs_name = (tres.filesystem_type == 1) ? "SMB" :
-				                       (tres.filesystem_type == 2) ? "NFS" : "Unknown";
-				fprintf(stdout, "Filesystem: %s\n", fs_name);
+				fprintf(stdout, "WARNING: Test path is on a remote filesystem\n");
+				fprintf(stdout, "Direct I/O may not be available. Results may not be accurate.\n");
 			}
 			if (opts->histogram)
 				print_histogram(&tres);
