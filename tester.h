@@ -69,6 +69,14 @@ static inline void result_free(const platform_t *platform, test_result_t *res)
 	if (res->completion)
 		platform->free(res->completion);
 	res->completion = NULL;
+
+	/* Phase 1: Free error array */
+	if (res->errors) {
+		free(res->errors);
+		res->errors = NULL;
+	}
+	res->error_count = 0;
+	res->max_errors = 0;
 }
 
 static inline int test_result_aggregate(test_result_t *dst,

@@ -69,11 +69,41 @@ typedef struct test_completion_t {
 	uint64_t frame;
 } test_completion_t;
 
+/* Filesystem type enumeration */
+typedef enum filesystem_type_t {
+	FILESYSTEM_LOCAL = 0,
+	FILESYSTEM_SMB = 1,
+	FILESYSTEM_NFS = 2,
+	FILESYSTEM_OTHER = 3,
+} filesystem_type_t;
+
+/* Error tracking structure */
+typedef struct error_info_t {
+	int errno_value;                /* System errno when error occurred */
+	char error_message[256];        /* Human-readable error message */
+	const char *operation;          /* Which operation failed (open/read/write/close) */
+	int frame_number;               /* Which frame failed */
+	int thread_id;                  /* Which thread encountered error */
+	uint64_t timestamp;             /* When error occurred (nanoseconds) */
+} error_info_t;
+
 typedef struct test_result_t {
 	uint64_t frames_written;
 	uint64_t bytes_written;
 	uint64_t time_taken_ns;
 	test_completion_t *completion;
+
+	/* Error tracking (Phase 1) */
+	int frames_failed;              /* Count of failed frames */
+	int frames_succeeded;           /* Count of successful frames */
+	float success_rate_percent;     /* (succeeded/total)*100 */
+	error_info_t *errors;           /* Array of errors */
+	int error_count;                /* Number of errors recorded */
+	int max_errors;                 /* Allocated error array size */
+
+	/* Filesystem info (Phase 1) */
+	int direct_io_available;        /* Was direct I/O actually used? (1=yes, 0=no) */
+	filesystem_type_t filesystem_type; /* Type of filesystem being tested */
 } test_result_t;
 
 #endif

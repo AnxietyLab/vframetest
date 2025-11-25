@@ -390,3 +390,127 @@ const platform_t *platform_get(void)
 {
 	return &default_platform;
 }
+
+/* Phase 1: Filesystem detection and error handling implementation */
+
+#if defined(__APPLE__)
+#include <sys/mount.h>
+#include <string.h>
+#elif defined(__linux__)
+#include <sys/statfs.h>
+#include <string.h>
+#endif
+
+/* Filesystem type detection using statfs
+ * Returns: 0=LOCAL, 1=SMB, 2=NFS, 3=OTHER
+ */
+int platform_detect_filesystem(const char *path)
+{
+#if defined(__APPLE__)
+	/* macOS statfs mount types */
+	struct statfs buf;
+	if (statfs(path, &buf) != 0)
+		return 3; /* OTHER on error */
+
+	/* Check f_type (macOS uses f_type as mount type flags) */
+	/* SMB magic: 0x4D4F4E4F */
+	if (strcmp(buf.f_fstypename, "smbfs") == 0)
+		return 1; /* SMB */
+	if (strcmp(buf.f_fstypename, "nfs") == 0)
+		return 2; /* NFS */
+
+	return 0; /* LOCAL */
+
+#elif defined(__linux__)
+	/* Linux statfs filesystem types */
+	struct statfs buf;
+	if (statfs(path, &buf) != 0)
+		return 3; /* OTHER on error */
+
+	/* Check f_type magic numbers */
+	/* NFS_SUPER_MAGIC = 0x6969 */
+	if (buf.f_type == 0x6969)
+		return 2; /* NFS */
+
+	/* SMB_SUPER_MAGIC = 0x517B */
+	if (buf.f_type == 0x517B)
+		return 1; /* SMB */
+
+	/* CIFS_MAGIC_NUMBER = 0xFF534D42 */
+	if (buf.f_type == 0xFF534D42)
+		return 1; /* SMB/CIFS */
+
+	return 0; /* LOCAL */
+
+#elif defined(_WIN32)
+	/* Windows filesystem detection */
+	char drive[4];
+	char fs_name[256];
+
+	if (path == NULL || path[0] == '\0')
+		return 3; /* OTHER */
+
+	/* Extract drive letter (e.g., "C:" from "C:\path") */
+	if (path[1] == ':') {
+		drive[0] = path[0];
+		drive[1] = ':';
+		drive[2] = '\\';
+		drive[3] = '\0';
+	} else if (path[0] == '\\' && path[1] == '\\') {
+		/* UNC path (\\server\share) - likely SMB */
+		return 1; /* SMB */
+	} else {
+		return 3; /* OTHER */
+	}
+
+	if (GetVolumeInformation(drive, NULL, 0, NULL, NULL, NULL,
+	                        fs_name, sizeof(fs_name))) {
+		if (strcmp(fs_name, "NTFS") == 0 || strcmp(fs_name, "FAT32") == 0)
+			return 0; /* LOCAL */
+		/* Network filesystems typically have different names */
+		if (strcmp(fs_name, "SMB") == 0)
+			return 1; /* SMB */
+	}
+	return 3; /* OTHER */
+
+#else
+	/* Unknown platform - assume local */
+	return 0; /* LOCAL */
+#endif
+}
+
+/* Check if direct I/O is available on file handle
+ * Returns: 1 if direct I/O is available/enabled, 0 otherwise
+ */
+int platform_has_direct_io(platform_handle_t fd)
+{
+#if defined(__APPLE__)
+	/* Test if F_NOCACHE is available on this file */
+	int ret = fcntl(fd, F_NOCACHE, 1);
+	if (ret < 0)
+		return 0; /* Direct I/O not available */
+	/* Restore original state */
+	fcntl(fd, F_NOCACHE, 0);
+	return 1;
+
+#elif defined(__linux__)
+	/* O_DIRECT is available if the file was opened with it */
+	/* We can't reliably detect this post-open, so assume yes */
+	return 1;
+
+#elif defined(_WIN32)
+	/* FILE_FLAG_NO_BUFFERING is generally available on Windows */
+	/* Return 1 assuming it's available */
+	return 1;
+
+#else
+	/* Unknown platform */
+	return 0;
+#endif
+}
+
+/* Get error string from errno value */
+const char* platform_strerror(int error_code)
+{
+	return strerror(error_code);
+}

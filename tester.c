@@ -27,9 +27,39 @@
 #endif
 #include <limits.h>
 #include <stdlib.h>
+#include <errno.h>
+#include <string.h>
 
 #include "tester.h"
 #include "timing.h"
+#include "platform.h"
+
+/* Phase 1: Error recording helper function */
+static inline void record_error(test_result_t *result, int errno_val,
+                               const char *operation, int frame_num,
+                               int thread_id)
+{
+	/* Expand error array if needed */
+	if (result->error_count >= result->max_errors) {
+		int new_size = (result->max_errors == 0) ? 10 : result->max_errors * 2;
+		error_info_t *new_errors = realloc(result->errors,
+		                                    new_size * sizeof(error_info_t));
+		if (!new_errors)
+			return; /* Can't allocate more memory */
+		result->errors = new_errors;
+		result->max_errors = new_size;
+	}
+
+	/* Record error details */
+	error_info_t *err = &result->errors[result->error_count++];
+	err->errno_value = errno_val;
+	err->operation = operation;
+	err->frame_number = frame_num;
+	err->thread_id = thread_id;
+	err->timestamp = timing_time();
+	snprintf(err->error_message, sizeof(err->error_message),
+	         "%s: %s", operation, platform_strerror(errno_val));
+}
 
 static inline size_t tester_frame_write(const platform_t *platform,
 					const char *path, frame_t *frame,
@@ -173,6 +203,14 @@ test_result_t tester_run_write(const platform_t *platform, const char *path,
 	if (!res.completion)
 		return res;
 
+	/* Phase 1: Initialize error tracking */
+	res.frames_failed = 0;
+	res.frames_succeeded = 0;
+	res.error_count = 0;
+	res.max_errors = 0;
+	res.errors = NULL;
+	res.direct_io_available = 1;
+
 	budget = fps ? (SEC_IN_NS / fps) : 0;
 	end_frame = start_frame + frames;
 
@@ -204,10 +242,15 @@ test_result_t tester_run_write(const platform_t *platform, const char *path,
 			break;
 		}
 		if (!tester_frame_write(platform, path, frame, frame_idx, files,
-					&res.completion[i - start_frame]))
+					&res.completion[i - start_frame])) {
+			/* Phase 1: Record error and continue tracking */
+			res.frames_failed++;
+			record_error(&res, errno, "write", frame_idx, 0);
 			break;
+		}
 		res.completion[i - start_frame].frame = timing_start();
 		++res.frames_written;
+		res.frames_succeeded++;
 		res.bytes_written += frame->size;
 		/* If fps limit is enabled loop until frame budget is gone */
 		if (fps && budget) {
@@ -219,6 +262,13 @@ test_result_t tester_run_write(const platform_t *platform, const char *path,
 			}
 		}
 	}
+
+	/* Phase 1: Calculate success rate */
+	if (res.frames_succeeded + res.frames_failed > 0) {
+		res.success_rate_percent = (res.frames_succeeded * 100.0) /
+		                            (res.frames_succeeded + res.frames_failed);
+	}
+
 	if (seq)
 		platform->free(seq);
 	return res;
@@ -237,6 +287,14 @@ test_result_t tester_run_read(const platform_t *platform, const char *path,
 	res.completion = platform->calloc(frames, sizeof(*res.completion));
 	if (!res.completion)
 		return res;
+
+	/* Phase 1: Initialize error tracking */
+	res.frames_failed = 0;
+	res.frames_succeeded = 0;
+	res.error_count = 0;
+	res.max_errors = 0;
+	res.errors = NULL;
+	res.direct_io_available = 1;
 
 	budget = fps ? (SEC_IN_NS / fps) : 0;
 	end_frame = start_frame + frames;
@@ -269,10 +327,15 @@ test_result_t tester_run_read(const platform_t *platform, const char *path,
 			break;
 		}
 		if (!tester_frame_read(platform, path, frame, frame_idx, files,
-				       &res.completion[i - start_frame]))
-			return res;
+				       &res.completion[i - start_frame])) {
+			/* Phase 1: Record error and continue tracking */
+			res.frames_failed++;
+			record_error(&res, errno, "read", frame_idx, 0);
+			break;
+		}
 		res.completion[i - start_frame].frame = timing_start();
 		++res.frames_written;
+		res.frames_succeeded++;
 		res.bytes_written += frame->size;
 		/* If fps limit is enabled loop until frame budget is gone */
 		if (fps && budget) {
@@ -284,6 +347,13 @@ test_result_t tester_run_read(const platform_t *platform, const char *path,
 			}
 		}
 	}
+
+	/* Phase 1: Calculate success rate */
+	if (res.frames_succeeded + res.frames_failed > 0) {
+		res.success_rate_percent = (res.frames_succeeded * 100.0) /
+		                            (res.frames_succeeded + res.frames_failed);
+	}
+
 	if (seq)
 		platform->free(seq);
 	return res;

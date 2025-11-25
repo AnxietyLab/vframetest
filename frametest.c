@@ -145,6 +145,17 @@ int run_test_threads(const platform_t *platform, const char *tst,
 
 	calculate_frame_range(threads, opts);
 
+	/* Phase 1: Detect filesystem type and warn if remote */
+	tres.filesystem_type = platform_detect_filesystem(opts->path);
+	if (tres.filesystem_type != 0) {
+		const char *fs_name = (tres.filesystem_type == 1) ? "SMB" :
+		                       (tres.filesystem_type == 2) ? "NFS" : "Unknown";
+		fprintf(stderr,
+		        "WARNING: Test path is on a remote filesystem (%s)\n"
+		        "Direct I/O may not be available. Results may not be accurate.\n",
+		        fs_name);
+	}
+
 	start = timing_start();
 	for (i = 0; i < opts->threads; i++) {
 		int res;
@@ -195,6 +206,18 @@ int run_test_threads(const platform_t *platform, const char *tst,
 			print_results_csv(tst, opts, &tres);
 		} else {
 			print_results(tst, opts, &tres);
+			/* Phase 1: Display error summary */
+			if (tres.frames_failed > 0) {
+				fprintf(stdout, "Frames failed: %d\n", tres.frames_failed);
+				fprintf(stdout, "Frames succeeded: %d\n", tres.frames_succeeded);
+				fprintf(stdout, "Success rate: %.2f%%\n", tres.success_rate_percent);
+			}
+			/* Phase 1: Display filesystem type for remote mounts */
+			if (tres.filesystem_type != 0) {
+				const char *fs_name = (tres.filesystem_type == 1) ? "SMB" :
+				                       (tres.filesystem_type == 2) ? "NFS" : "Unknown";
+				fprintf(stdout, "Filesystem: %s\n", fs_name);
+			}
 			if (opts->histogram)
 				print_histogram(&tres);
 		}

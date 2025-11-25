@@ -80,4 +80,21 @@ typedef struct platform_t {
 
 const platform_t *platform_get(void);
 
+/* Phase 1: Filesystem detection and error handling */
+
+/* Filesystem type detection function
+ * Returns: 0=LOCAL, 1=SMB, 2=NFS, 3=OTHER
+ */
+int platform_detect_filesystem(const char *path);
+
+/* Check if direct I/O is available on the given file handle
+ * Returns: 1 if direct I/O is supported/enabled, 0 otherwise
+ */
+int platform_has_direct_io(platform_handle_t fd);
+
+/* Get string representation of system error code
+ * Returns: pointer to static error string
+ */
+const char* platform_strerror(int error_code);
+
 #endif
