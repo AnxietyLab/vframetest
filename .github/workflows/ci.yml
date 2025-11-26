@@ -81,7 +81,11 @@ jobs:
       - uses: actions/checkout@v4
 
       - name: Install dependencies
-        run: sudo apt-get update && sudo apt-get install -y build-essential
+        run: sudo apt-get update && sudo apt-get install -y build-essential cppcheck
+
+      - name: Static Analysis
+        run: |
+          cppcheck --enable=all --error-exitcode=1 src/
 
       - name: Build for Linux
         run: |
