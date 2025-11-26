@@ -18,11 +18,22 @@
  * 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
+#ifdef __linux__
+#if __STDC_VERSION__ >= 199901L
+#define _XOPEN_SOURCE 600
+#else
+#define _XOPEN_SOURCE 500
+#endif
+#endif
+
 #include <getopt.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <time.h>
+#include <unistd.h>
+#include <sys/stat.h>
+#include <errno.h>
 
 #include "profile.h"
 #include "frame.h"
@@ -158,14 +169,14 @@ int run_test_threads(const platform_t *platform, const char *tst,
 
 	start = timing_start();
 	for (i = 0; i < opts->threads; i++) {
-		int res;
+		int thread_res;
 
 		threads[i].id = i;
 		threads[i].platform = platform;
 		threads[i].opts = opts;
-		res = platform->thread_create(&threads[i].thread, tfunc,
+		thread_res = platform->thread_create(&threads[i].thread, tfunc,
 					      (void *)&threads[i]);
-		if (res) {
+		if (thread_res) {
 			size_t j;
 			void *ret;
 
@@ -538,7 +549,9 @@ int main(int argc, char **argv)
 	int c = 0;
 	int opt_index = 0;
 
-	srand(time(NULL));
+	struct timespec ts;
+	clock_gettime(CLOCK_MONOTONIC, &ts);
+	srand((unsigned)(ts.tv_sec ^ ts.tv_nsec ^ getpid()));
 	setvbuf(stdout, NULL, _IONBF, 0);
 	setvbuf(stderr, NULL, _IONBF, 0);
 	opts.threads = 1;
@@ -646,6 +659,18 @@ int main(int argc, char **argv)
 	}
 	if (!opts.path) {
 		usage(argv[0]);
+		return 1;
+	}
+
+	/* Validate path exists and is accessible */
+	struct stat path_stat;
+	if (stat(opts.path, &path_stat) != 0) {
+		fprintf(stderr, "ERROR: Cannot access path '%s': %s\n",
+		        opts.path, strerror(errno));
+		return 1;
+	}
+	if (!opts.single_file && !S_ISDIR(path_stat.st_mode)) {
+		fprintf(stderr, "ERROR: Path '%s' is not a directory\n", opts.path);
 		return 1;
 	}
 

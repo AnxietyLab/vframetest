@@ -66,11 +66,12 @@ static inline void result_free(const platform_t *platform, test_result_t *res)
 {
 	if (!res)
 		return;
+	pthread_mutex_destroy(&res->error_mutex);
 	if (res->completion)
 		platform->free(res->completion);
 	res->completion = NULL;
 
-	/* Phase 1: Free error array */
+	/* Note: errors array uses standard realloc(), so use standard free() */
 	if (res->errors) {
 		free(res->errors);
 		res->errors = NULL;

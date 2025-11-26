@@ -39,13 +39,22 @@ static inline void record_error(test_result_t *result, int errno_val,
                                const char *operation, int frame_num,
                                int thread_id)
 {
+	pthread_mutex_lock(&result->error_mutex);
+
 	/* Expand error array if needed */
 	if (result->error_count >= result->max_errors) {
 		int new_size = (result->max_errors == 0) ? 10 : result->max_errors * 2;
+		/* Cap maximum errors to prevent unbounded growth */
+		if (new_size > 10000) {
+			pthread_mutex_unlock(&result->error_mutex);
+			return; /* Too many errors, stop recording */
+		}
 		error_info_t *new_errors = realloc(result->errors,
 		                                    new_size * sizeof(error_info_t));
-		if (!new_errors)
-			return; /* Can't allocate more memory */
+		if (!new_errors) {
+			pthread_mutex_unlock(&result->error_mutex);
+			return; /* Keep using existing buffer, just stop adding */
+		}
 		result->errors = new_errors;
 		result->max_errors = new_size;
 	}
@@ -59,6 +68,8 @@ static inline void record_error(test_result_t *result, int errno_val,
 	err->timestamp = timing_time();
 	snprintf(err->error_message, sizeof(err->error_message),
 	         "%s: %s", operation, platform_strerror(errno_val));
+
+	pthread_mutex_unlock(&result->error_mutex);
 }
 
 static inline size_t tester_frame_write(const platform_t *platform,
@@ -72,12 +83,10 @@ static inline size_t tester_frame_write(const platform_t *platform,
 
 	switch (files) {
 	case TEST_FILES_MULTIPLE:
-		snprintf(name, PATH_MAX, "%s/frame%.6zu.tst", path, num);
-		name[PATH_MAX] = 0;
+		snprintf(name, sizeof(name), "%s/frame%.6zu.tst", path, num);
 		break;
 	case TEST_FILES_SINGLE:
-		snprintf(name, PATH_MAX, "%s", path);
-		name[PATH_MAX] = 0;
+		snprintf(name, sizeof(name), "%s", path);
 		break;
 	default:
 		return 1;
@@ -123,12 +132,10 @@ static inline size_t tester_frame_read(const platform_t *platform,
 
 	switch (files) {
 	case TEST_FILES_MULTIPLE:
-		snprintf(name, PATH_MAX, "%s/frame%.6zu.tst", path, num);
-		name[PATH_MAX] = 0;
+		snprintf(name, sizeof(name), "%s/frame%.6zu.tst", path, num);
 		break;
 	case TEST_FILES_SINGLE:
-		snprintf(name, PATH_MAX, "%s", path);
-		name[PATH_MAX] = 0;
+		snprintf(name, sizeof(name), "%s", path);
 		break;
 	default:
 		return 1;
@@ -165,8 +172,7 @@ frame_t *tester_get_frame_read(const platform_t *platform, const char *path,
 {
 	char name[PATH_MAX + 1];
 
-	snprintf(name, PATH_MAX, "%s/frame%.6lu.tst", path, 0UL);
-	name[PATH_MAX] = 0;
+	snprintf(name, sizeof(name), "%s/frame%.6lu.tst", path, 0UL);
 
 	return frame_from_file(platform, name, frame_size);
 }
@@ -198,6 +204,8 @@ test_result_t tester_run_write(const platform_t *platform, const char *path,
 	size_t budget;
 	size_t end_frame;
 	size_t *seq = NULL;
+
+	pthread_mutex_init(&res.error_mutex, NULL);
 
 	res.completion = platform->calloc(frames, sizeof(*res.completion));
 	if (!res.completion)
@@ -246,7 +254,7 @@ test_result_t tester_run_write(const platform_t *platform, const char *path,
 			/* Phase 1: Record error and continue tracking */
 			res.frames_failed++;
 			record_error(&res, errno, "write", frame_idx, 0);
-			break;
+			continue;
 		}
 		res.completion[i - start_frame].frame = timing_start();
 		++res.frames_written;
@@ -283,6 +291,8 @@ test_result_t tester_run_read(const platform_t *platform, const char *path,
 	size_t budget;
 	size_t end_frame;
 	size_t *seq = NULL;
+
+	pthread_mutex_init(&res.error_mutex, NULL);
 
 	res.completion = platform->calloc(frames, sizeof(*res.completion));
 	if (!res.completion)
@@ -331,7 +341,7 @@ test_result_t tester_run_read(const platform_t *platform, const char *path,
 			/* Phase 1: Record error and continue tracking */
 			res.frames_failed++;
 			record_error(&res, errno, "read", frame_idx, 0);
-			break;
+			continue;
 		}
 		res.completion[i - start_frame].frame = timing_start();
 		++res.frames_written;

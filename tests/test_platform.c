@@ -261,6 +261,12 @@ const platform_t *test_platform_get(void)
 	return &test_platform;
 }
 
+/* Mock platform_strerror for testing */
+const char* platform_strerror(int error_code)
+{
+	return strerror(error_code);
+}
+
 void test_platform_finalize(void)
 {
 	size_t i;

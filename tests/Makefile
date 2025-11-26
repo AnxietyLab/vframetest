@@ -1,4 +1,4 @@
-CFLAGS+=-std=c99 -O0 -g -Wall -Werror -Wpedantic -pedantic-errors -I. -I..
+CFLAGS+=-std=c99 -O0 -g -Wall -Werror -Wpedantic -pedantic-errors -I. -I.. -I../src
 TESTS=frame histogram profile tester
 BUILD_FOLDER:=$(PWD)/build/tests
 TEST_BINS=$(addprefix $(BUILD_FOLDER)/test_,$(TESTS))
@@ -15,10 +15,13 @@ build_tests: $(BUILD_FOLDER) $(BUILD_FOLDER)/test_platform.o $(OBJECTS)
 $(BUILD_FOLDER):
 	install -d $(BUILD_FOLDER)
 
+$(BUILD_FOLDER)/test_platform.o: test_platform.c
+	$(CC) -c $(CFLAGS) -o $@ $<
+
 $(BUILD_FOLDER)/test_%: $(BUILD_FOLDER)/test_platform.o $(BUILD_FOLDER)/test_%.o
 	$(CC) -o $@ $^ $(LDFLAGS)
 
-$(BUILD_FOLDER)/test_%.o: test_%.c ../%.c ../%.h test_platform.c
+$(BUILD_FOLDER)/test_%.o: test_%.c ../src/%.c ../src/%.h test_platform.c
 	$(CC) -c $(CFLAGS) -o $@ $<
 
 run_tests: $(TEST_BINS)

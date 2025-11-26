@@ -21,6 +21,7 @@
 #ifndef FRAMETEST_FRAMETEST_H
 #define FRAMETEST_FRAMETEST_H
 
+#include <pthread.h>
 #include "profile.h"
 #include "frame.h"
 
@@ -100,6 +101,7 @@ typedef struct test_result_t {
 	error_info_t *errors;           /* Array of errors */
 	int error_count;                /* Number of errors recorded */
 	int max_errors;                 /* Allocated error array size */
+	pthread_mutex_t error_mutex;    /* Mutex for thread-safe error recording */
 
 	/* Filesystem info (Phase 1) */
 	int direct_io_available;        /* Was direct I/O actually used? (1=yes, 0=no) */

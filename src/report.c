@@ -38,6 +38,14 @@ static void print_stat_about(const test_result_t *res, const char *label,
 	uint64_t total = 0;
 	size_t i;
 
+	if (res->frames_written == 0) {
+		if (csv)
+			printf("0,0,0,");
+		else
+			printf("%s: no data\n", label);
+		return;
+	}
+
 	for (i = 0; i < res->frames_written; i++) {
 		size_t val;
 
@@ -69,7 +77,7 @@ static void print_stat_about(const test_result_t *res, const char *label,
 	}
 	if (csv) {
 		printf("%" PRIu64 ",", min);
-		printf("%lf,", (double)total / res->frames_written);
+		printf("%.9lf,", (double)total / res->frames_written);
 		printf("%" PRIu64 ",", max);
 	} else {
 		printf("%s:\n", label);
@@ -169,11 +177,11 @@ void print_results_csv(const char *tcase, const opts_t *opts,
 	printf("%" PRIu64 ",", res->frames_written);
 	printf("%" PRIu64 ",", res->bytes_written);
 	printf("%" PRIu64 ",", res->time_taken_ns);
-	printf("%lf,",
+	printf("%.9lf,",
 	       (double)res->frames_written * SEC_IN_NS / res->time_taken_ns);
-	printf("%lf,",
+	printf("%.9lf,",
 	       (double)res->bytes_written * SEC_IN_NS / res->time_taken_ns);
-	printf("%lf,", (double)res->bytes_written * SEC_IN_NS / (1024 * 1024) /
+	printf("%.9lf,", (double)res->bytes_written * SEC_IN_NS / (1024 * 1024) /
 			       res->time_taken_ns);
 	print_frames_stat(res, opts);
 	printf("\n");
@@ -210,11 +218,11 @@ void print_results_json(const char *tcase, const opts_t *opts,
 	printf("      \"frames\": %" PRIu64 ",\n", res->frames_written);
 	printf("      \"bytes\": %" PRIu64 ",\n", res->bytes_written);
 	printf("      \"time_ns\": %" PRIu64 ",\n", res->time_taken_ns);
-	printf("      \"fps\": %lf,\n",
+	printf("      \"fps\": %.9lf,\n",
 	       (double)res->frames_written * SEC_IN_NS / res->time_taken_ns);
-	printf("      \"bps\": %lf,\n",
+	printf("      \"bps\": %.9lf,\n",
 	       (double)res->bytes_written * SEC_IN_NS / res->time_taken_ns);
-	printf("      \"mibps\": %lf,\n",
+	printf("      \"mibps\": %.9lf,\n",
 	       (double)res->bytes_written * SEC_IN_NS / (1024 * 1024) /
 	       res->time_taken_ns);
 
@@ -230,10 +238,14 @@ void print_results_json(const char *tcase, const opts_t *opts,
 			total += val;
 		}
 		printf("      \"completion\": {\n");
-		printf("        \"min_ms\": %lf,\n", (double)min / SEC_IN_MS);
-		printf("        \"avg_ms\": %lf,\n",
-		       (double)total / res->frames_written / SEC_IN_MS);
-		printf("        \"max_ms\": %lf\n", (double)max / SEC_IN_MS);
+		printf("        \"min_ms\": %.9lf,\n", (double)min / SEC_IN_MS);
+		if (res->frames_written > 0) {
+			printf("        \"avg_ms\": %.9lf,\n",
+			       (double)total / res->frames_written / SEC_IN_MS);
+		} else {
+			printf("        \"avg_ms\": 0,\n");
+		}
+		printf("        \"max_ms\": %.9lf\n", (double)max / SEC_IN_MS);
 		printf("      }\n");
 	} else {
 		printf("      \"completion\": null\n");
