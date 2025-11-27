@@ -85,6 +85,7 @@ jobs:
             runner: macos-latest
             arch: universal
             cc: clang
+            cross_prefix: ""
             build_flags: "-arch arm64 -arch x86_64"
             artifact_suffix: macos-universal
 
@@ -92,6 +93,7 @@ jobs:
             runner: macos-latest
             arch: arm64
             cc: clang
+            cross_prefix: ""
             build_flags: "-arch arm64"
             artifact_suffix: macos-arm64
 
@@ -99,6 +101,7 @@ jobs:
             runner: macos-latest
             arch: x86_64
             cc: clang
+            cross_prefix: ""
             build_flags: "-arch x86_64"
             artifact_suffix: macos-x86_64
 
@@ -107,6 +110,7 @@ jobs:
             runner: ubuntu-latest
             arch: x86_64
             cc: gcc
+            cross_prefix: ""
             build_flags: ""
             artifact_suffix: linux-gcc-x86_64
 
@@ -114,6 +118,7 @@ jobs:
             runner: ubuntu-latest
             arch: x86_64
             cc: clang
+            cross_prefix: ""
             build_flags: ""
             artifact_suffix: linux-clang-x86_64
 
@@ -135,7 +140,7 @@ jobs:
     env:
       # Platform and architecture specific settings
       CC: ${{ matrix.cc }}
-      CROSS_COMPILE: ${{ matrix.cross_prefix || '' }}
+      CROSS_COMPILE: ${{ matrix.cross_prefix }}
 
     steps:
       - uses: actions/checkout@v4
