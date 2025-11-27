@@ -74,6 +74,7 @@ jobs:
         with:
           name: benchmark-data-macos
           path: dashboard/data/builds-macos.json
+          if-no-files-found: warn
 
   build-linux:
     runs-on: ubuntu-latest
@@ -88,6 +89,7 @@ jobs:
           cppcheck --enable=all --error-exitcode=1 src/
 
       - name: Build for Linux
+        id: build
         run: |
           START_TIME=$SECONDS
           make clean
@@ -98,7 +100,14 @@ jobs:
           echo "BUILD_STATUS=success" >> $GITHUB_ENV
 
       - name: Run tests
-        run: make test
+        id: test
+        continue-on-error: true
+        run: |
+          if make test; then
+            echo "TEST_STATUS=success" >> $GITHUB_ENV
+          else
+            echo "TEST_STATUS=failure" >> $GITHUB_ENV
+          fi
 
       - name: Collect benchmark data
         if: always()
@@ -107,7 +116,12 @@ jobs:
           chmod +x scripts/collect-benchmarks.sh
           VERSION=$(grep '^MAJOR=' Makefile | cut -d= -f2).$(grep '^MINOR=' Makefile | cut -d= -f2).$(grep '^PATCH=' Makefile | cut -d= -f2)
           mkdir -p dashboard/data
-          ./scripts/collect-benchmarks.sh "v${VERSION}" "Linux" "${{ env.BUILD_STATUS }}" "${{ env.BUILD_DURATION }}"
+          # Determine overall status based on build and test results
+          OVERALL_STATUS="${{ env.BUILD_STATUS }}"
+          if [ "${{ env.TEST_STATUS }}" = "failure" ]; then
+            OVERALL_STATUS="failure"
+          fi
+          ./scripts/collect-benchmarks.sh "v${VERSION}" "Linux" "${OVERALL_STATUS}" "${{ env.BUILD_DURATION }}" || echo "Warning: benchmark collection failed, continuing..."
           # Create platform-specific benchmark file to avoid conflicts
           if [ -f dashboard/data/builds.json ]; then
             cp dashboard/data/builds.json dashboard/data/builds-linux.json
@@ -126,6 +140,18 @@ jobs:
         with:
           name: benchmark-data-linux
           path: dashboard/data/builds-linux.json
+          if-no-files-found: warn
+
+      - name: Report build status
+        if: always()
+        run: |
+          echo "Build Status: ${{ env.BUILD_STATUS }}"
+          echo "Test Status: ${{ env.TEST_STATUS }}"
+          if [ "${{ env.TEST_STATUS }}" = "failure" ]; then
+            echo "❌ Tests failed"
+            exit 1
+          fi
+          echo "✅ All checks passed"
 
   build-windows:
     runs-on: windows-latest
@@ -187,6 +213,7 @@ jobs:
         with:
           name: benchmark-data-windows-${{ matrix.arch }}
           path: dashboard/data/builds-windows-${{ matrix.arch }}.json
+          if-no-files-found: warn
 
   release:
     needs: [build-macos, build-linux, build-windows]
