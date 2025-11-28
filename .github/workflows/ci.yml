@@ -207,9 +207,10 @@ jobs:
             make
             cppcheck
 
-      # Build step
-      - name: Build binary
-        shell: ${{ runner.os == 'Windows' && 'msys2 {0}' || 'bash' }}
+      # Build step (Windows)
+      - name: Build binary (Windows)
+        if: runner.os == 'Windows'
+        shell: msys2 {0}
         run: |
           set -euo pipefail
 
@@ -221,14 +222,11 @@ jobs:
           echo "Version: ${{ env.VERSION }}"
           echo ""
 
-          # Record build timing
           BUILD_START=$(date +%s)
 
-          # Clean previous builds
           mkdir -p "${{ env.BUILD_DIR }}"
           make clean BUILD_FOLDER="${{ env.BUILD_DIR }}" || true
 
-          # Build with version flags
           CFLAGS="${{ matrix.build_flags }} -DMAJOR=$(echo ${{ env.VERSION }} | cut -d. -f1) -DMINOR=$(echo ${{ env.VERSION }} | cut -d. -f2) -DPATCH=$(echo ${{ env.VERSION }} | cut -d. -f3)"
 
           if [ -z "${{ matrix.cross_prefix }}" ]; then
@@ -241,13 +239,7 @@ jobs:
           BUILD_DURATION=$((BUILD_END - BUILD_START))
           echo "BUILD_DURATION=${BUILD_DURATION}" >> $GITHUB_ENV
 
-          # Verify binary
-          if [ "${{ runner.os }}" = "Windows" ]; then
-            BINARY="${{ env.BUILD_DIR }}/vframetest.exe"
-          else
-            BINARY="${{ env.BUILD_DIR }}/vframetest"
-          fi
-
+          BINARY="${{ env.BUILD_DIR }}/vframetest.exe"
           if [ ! -f "$BINARY" ]; then
             echo "❌ Build failed: Binary not found at $BINARY"
             exit 1
@@ -256,23 +248,73 @@ jobs:
           echo "✅ Build successful"
           ls -lh "$BINARY"
 
-      - name: Verify binary functionality (smoke test)
-        shell: ${{ runner.os == 'Windows' && 'msys2 {0}' || 'bash' }}
+      # Build step (*nix)
+      - name: Build binary (*nix)
+        if: runner.os != 'Windows'
+        shell: bash
         run: |
           set -euo pipefail
 
-          if [ "${{ runner.os }}" = "Windows" ]; then
-            BINARY="${{ env.BUILD_DIR }}/vframetest.exe"
+          echo "=== Build Configuration ==="
+          echo "OS: ${{ matrix.os }}"
+          echo "Architecture: ${{ matrix.arch }}"
+          echo "Compiler: ${{ matrix.cc }}"
+          echo "Build Directory: ${{ env.BUILD_DIR }}"
+          echo "Version: ${{ env.VERSION }}"
+          echo ""
+
+          BUILD_START=$(date +%s)
+
+          mkdir -p "${{ env.BUILD_DIR }}"
+          make clean BUILD_FOLDER="${{ env.BUILD_DIR }}" || true
+
+          CFLAGS="${{ matrix.build_flags }} -DMAJOR=$(echo ${{ env.VERSION }} | cut -d. -f1) -DMINOR=$(echo ${{ env.VERSION }} | cut -d. -f2) -DPATCH=$(echo ${{ env.VERSION }} | cut -d. -f3)"
+
+          if [ -z "${{ matrix.cross_prefix }}" ]; then
+            make BUILD_FOLDER="${{ env.BUILD_DIR }}" CFLAGS="$CFLAGS"
           else
-            BINARY="${{ env.BUILD_DIR }}/vframetest"
+            make BUILD_FOLDER="${{ env.BUILD_DIR }}" CROSS=${{ matrix.cross_prefix }} CFLAGS="$CFLAGS"
           fi
 
-          echo "=== Smoke Test: Version Check ==="
+          BUILD_END=$(date +%s)
+          BUILD_DURATION=$((BUILD_END - BUILD_START))
+          echo "BUILD_DURATION=${BUILD_DURATION}" >> $GITHUB_ENV
+
+          BINARY="${{ env.BUILD_DIR }}/vframetest"
+          if [ ! -f "$BINARY" ]; then
+            echo "❌ Build failed: Binary not found at $BINARY"
+            exit 1
+          fi
+
+          echo "✅ Build successful"
+          ls -lh "$BINARY"
+
+      - name: Verify binary functionality (Windows)
+        if: runner.os == 'Windows'
+        shell: msys2 {0}
+        run: |
+          set -euo pipefail
+          BINARY="${{ env.BUILD_DIR }}/vframetest.exe"
+
+          echo "=== Smoke Test: Version Check (Windows) ==="
           "$BINARY" --version || {
             echo "❌ Binary version check failed"
             exit 1
           }
+          echo "✅ Smoke test passed"
 
+      - name: Verify binary functionality (*nix)
+        if: runner.os != 'Windows'
+        shell: bash
+        run: |
+          set -euo pipefail
+          BINARY="${{ env.BUILD_DIR }}/vframetest"
+
+          echo "=== Smoke Test: Version Check (*nix) ==="
+          "$BINARY" --version || {
+            echo "❌ Binary version check failed"
+            exit 1
+          }
           echo "✅ Smoke test passed"
 
       - name: Create universal binary (macOS arm64+x86_64 only)
@@ -422,11 +464,21 @@ jobs:
             mingw-w64-x86_64-toolchain
             make
 
-      - name: Build and run unit tests
-        shell: ${{ runner.os == 'Windows' && 'msys2 {0}' || 'bash' }}
+      - name: Build and run unit tests (Windows)
+        if: runner.os == 'Windows'
+        shell: msys2 {0}
         run: |
           set -euo pipefail
-          echo "=== Running Unit Tests ==="
+          echo "=== Running Unit Tests (Windows) ==="
+          make test BUILD_FOLDER="${{ env.BUILD_DIR }}"
+          echo "✅ Unit tests passed"
+
+      - name: Build and run unit tests (*nix)
+        if: runner.os != 'Windows'
+        shell: bash
+        run: |
+          set -euo pipefail
+          echo "=== Running Unit Tests (*nix) ==="
           make test BUILD_FOLDER="${{ env.BUILD_DIR }}"
           echo "✅ Unit tests passed"
 
