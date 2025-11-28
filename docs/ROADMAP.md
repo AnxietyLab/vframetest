@@ -54,45 +54,60 @@
 - ✅ Enhanced JSON output with optimization_metrics section
 - ✅ Cross-platform support (macOS, Linux, Windows)
 
-## Planned: Phase 4 📋
+## In Development: Phase 4 🚀
 
-### Advanced Filesystem Optimization
-- NFS nconnect parameter detection and optimization
-- SMB multi-channel configuration detection
-- Performance impact estimation
-- Optimization recommendations
+### Phase 4A: TUI Real-Time Dashboard (Priority 1)
+**Terminal User Interface for Live Test Monitoring**
+- Real-time test progress and performance metrics
+- Live performance trends (improving/stable/degrading)
+- I/O mode visualization (Direct vs Buffered)
+- Filesystem optimization status display
+- Unicode-based charts and visualizations
+- No external dependencies (ANSI escape codes)
+- Works over SSH connections
+- Keyboard controls for navigation
 
-### Distributed Testing
-- Client-server testing architecture
-- Aggregate results from multiple systems
-- Centralized performance dashboard
-- Comparative analysis across systems
+**Technical Approach:**
+- Leverage ANSI escape sequences (zero external deps)
+- Interactive display with live updates
+- Minimal performance overhead (<1%)
+- Compatible with all terminal emulators
 
-### Performance Analytics
-- Historical trend tracking
-- Regression detection with statistical analysis
-- Performance correlation analysis
-- Capacity planning recommendations
+### Phase 4B: REST API & Data Export (Priority 2)
+**Programmatic Access to Test Results**
+- RESTful API for test result queries
+- Real-time metrics via WebSocket (optional)
+- CSV/JSON export from API
+- Query historical data
+- Integration with external tools
+- TUI consumes this API internally
+
+### Phase 4C: Enhanced Output Formats (Priority 3)
+- Structured data export for analysis
+- Integration with monitoring systems
+- Alert triggers on performance degradation
 
 ## Future Vision 🔮
 
-### Web Dashboard
-- Real-time performance monitoring
-- Historical data visualization
-- Multi-system comparison
-- Automated alerting
+### Phase 5: Web Dashboard & Historical Analysis
+- Rich web-based visualization
+- Historical data deep-dives
+- Multi-test comparison
+- Team collaboration features
+- Automated performance reports
+- Consumed REST API from Phase 4B
 
-### Cloud Integration
-- AWS EBS performance tracking
-- Azure managed disk testing
-- GCP persistent disk validation
-- Multi-cloud comparison
+### Phase 6: Advanced Analytics & Cloud Integration
+- Machine learning anomaly detection
+- AWS/Azure/GCP performance tracking
+- Distributed testing orchestration
+- Automated optimization recommendations
 
-### Machine Learning
-- Anomaly detection in I/O patterns
-- Performance prediction
-- Automated issue identification
-- Optimization recommendations
+### Phase 7+: Enterprise Features
+- Multi-user management
+- Advanced alerting & notifications
+- Custom reporting
+- Integration with ITSM systems
 
 ### Advanced Features
 - Custom test profile wizard
