@@ -18,6 +18,12 @@
  * 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
+// Enable POSIX timers (clock_gettime, struct timespec, CLOCK_MONOTONIC)
+// when compiling on Linux with strict C99 (as in CI).
+#if defined(__linux__) && !defined(_POSIX_C_SOURCE)
+#define _POSIX_C_SOURCE 200809L
+#endif
+
 #include <getopt.h>
 #include <stdio.h>
 #include <stdlib.h>
