@@ -611,55 +611,46 @@ static void render_latency(tui_app_state_t *state, tui_metrics_t *metrics, int w
 		}
 	}
 	
-	/* Draw histogram as horizontal bar */
+	/* Draw histogram header */
 	SET_TEXT();
 	screen_move(&scr, row, 2);
 	screen_printf(&scr, "Distribution (%zu frames):", frame_count);
 	row++;
-	
-	/* Draw the histogram bar */
+
+	/* Unicode bar characters: ▁▂▃▄▅▆▇█ (8 levels) */
+	static const char *bars[] = {" ", "▁", "▂", "▃", "▄", "▅", "▆", "▇", "█"};
+
+	/* Draw the histogram using Unicode sparkline bars */
 	screen_move(&scr, row, 2);
-	screen_print(&scr, "[");
-	
-	const char levels[] = " ._-~=#*@";  /* 9 levels */
 	for (int i = 0; i < HIST_BUCKETS; i++) {
 		int level = 0;
 		if (max_bucket > 0 && histogram[i] > 0) {
 			level = 1 + (int)((histogram[i] * 7) / max_bucket);
 			if (level > 8) level = 8;
 		}
-		
-		/* Color: left side (low latency) = green, right side (high) = red */
+
+		/* Color based on latency position: green (fast) -> yellow -> red (slow) */
 		if (i < HIST_BUCKETS / 3) {
-			SET_SUCCESS();
+			SET_SUCCESS();  /* Green - low latency */
 		} else if (i < (HIST_BUCKETS * 2) / 3) {
-			SET_WARNING();
+			SET_WARNING();  /* Yellow - medium latency */
 		} else {
-			SET_ERROR();
+			SET_ERROR();    /* Red - high latency */
 		}
-		screen_putc(&scr, levels[level]);
+		screen_print(&scr, bars[level]);
 	}
-	SET_TEXT();
-	screen_print(&scr, "]");
 	RESET_COLOR();
 	row++;
-	
-	/* Labels under histogram */
-	SET_TEXT();
+
+	/* Labels under histogram: min on left, max on right */
 	screen_move(&scr, row, 2);
-	screen_print(&scr, " ");
 	SET_SUCCESS();
 	screen_printf(&scr, "%.1fms", (double)min_ns / 1e6);
-	
-	/* Center label - median area */
-	int center_pos = 2 + HIST_BUCKETS / 2 - 3;
-	screen_move(&scr, row, center_pos);
-	SET_WARNING();
-	double mid_ms = (double)(min_ns + range_ns) / 2.0 / 1e6;
-	screen_printf(&scr, "%.1fms", mid_ms);
-	
-	/* Right label */
-	screen_move(&scr, row, 2 + HIST_BUCKETS - 6);
+
+	/* Right-align max label */
+	char max_label[16];
+	snprintf(max_label, sizeof(max_label), "%.1fms", (double)max_ns / 1e6);
+	screen_move(&scr, row, 2 + HIST_BUCKETS - (int)strlen(max_label));
 	SET_ERROR();
 	screen_printf(&scr, "%.1fms", (double)max_ns / 1e6);
 	RESET_COLOR();

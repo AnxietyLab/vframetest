@@ -1374,13 +1374,9 @@ static int run_interactive(opts_t *opts)
 				metrics.frames_succeeded = current_frames;
 				
 				if (progress.last_frame_time_ns > 0) {
-					/* Update latency stats without incrementing frame count
-					 * (frame count comes directly from progress) */
+					/* Update latency stats */
 					metrics.current_io_mode = progress.last_io_mode;
-					if (progress.last_io_mode == IO_MODE_DIRECT) {
-						metrics.frames_direct_io = current_frames;
-					}
-					
+
 					/* Add ALL new frames to history since last check */
 					while (last_frame_count < current_frames) {
 						last_frame_count++;
@@ -1394,6 +1390,10 @@ static int run_interactive(opts_t *opts)
 							.thread_id = (int)(last_frame_count % test_opts.threads)
 						};
 						tui_history_add(&state, &rec);
+
+						/* Update metrics with latency min/max/sparkline */
+						tui_metrics_update(&metrics, progress.last_frame_time_ns,
+						                   frame_bytes, progress.last_io_mode, 1);
 					}
 				}
 				
