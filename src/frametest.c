@@ -588,6 +588,7 @@ int run_tests(opts_t *opts)
 		print_header_csv(opts);
 
 	/* Select appropriate test runner based on TUI mode */
+#ifndef NO_TUI
 	if (opts->tui) {
 		/* TUI mode - use real-time dashboard */
 		if (opts->mode & TEST_WRITE) {
@@ -602,7 +603,9 @@ int run_tests(opts_t *opts)
 			run_test_threads_tui(platform, "read", opts,
 			                     &run_read_test_thread_tui);
 		}
-	} else {
+	} else
+#endif
+	{
 		/* Standard mode */
 		if (opts->mode & TEST_WRITE) {
 			if (!opts->frm) {
@@ -843,9 +846,10 @@ void usage(const char *name)
 #undef DESC_POS
 
 /* ─────────────────────────────────────────────────────────────────────────────
- * Interactive TTY mode
+ * Interactive TTY mode (Unix only)
  * ───────────────────────────────────────────────────────────────────────────── */
 
+#ifndef NO_TUI
 /* Create test directory if it doesn't exist */
 static int ensure_test_directory(const char *path)
 {
@@ -930,7 +934,6 @@ static int cleanup_test_files(const char *path)
 	return count;
 }
 
-#ifndef NO_TUI
 /* Open dashboard in browser via local HTTP server (needed for fetch to work) */
 static int open_dashboard(void)
 {

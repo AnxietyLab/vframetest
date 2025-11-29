@@ -419,5 +419,5 @@ void screen_render(screen_t *scr)
 	pos += snprintf(out + pos, sizeof(out) - pos, "\033[0m\033[?25h");
 	
 	/* Write all at once - ignore return (best effort output) */
-	(void)write(STDOUT_FILENO, out, pos);
+	if (write(STDOUT_FILENO, out, pos) < 0) { /* suppress warn_unused_result */ }
 }
