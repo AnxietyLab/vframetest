@@ -48,12 +48,15 @@
 #include "frametest.h"
 #include "report.h"
 #include "platform.h"
+
+#ifndef NO_TUI
 #include "tui.h"
 #include "tty.h"
 #include "tui_state.h"
 #include "tui_input.h"
 #include "tui_render.h"
 #include "screen.h"
+#endif
 
 /* Shared progress state for TUI updates (volatile for thread safety) */
 typedef struct tui_progress_t {
@@ -134,6 +137,7 @@ void *run_read_test_thread(void *arg)
 	return NULL;
 }
 
+#ifndef NO_TUI
 /* Progress callback for TUI - updates shared progress state using atomics */
 static void tui_progress_callback(void *ctx, size_t frames_done,
                                   size_t bytes_written, uint64_t frame_time_ns,
@@ -212,6 +216,7 @@ void *run_read_test_thread_tui(void *arg)
 
 	return NULL;
 }
+#endif /* NO_TUI */
 
 void calculate_frame_range(thread_info_t *threads, const opts_t *opts)
 {
@@ -355,6 +360,7 @@ int run_test_threads(const platform_t *platform, const char *tst,
 	return res;
 }
 
+#ifndef NO_TUI
 /* TUI-enabled test runner with real-time progress updates */
 int run_test_threads_tui(const platform_t *platform, const char *tst,
                          const opts_t *opts, void *(*tfunc)(void *))
@@ -504,6 +510,7 @@ int run_test_threads_tui(const platform_t *platform, const char *tst,
 	platform->free(threads);
 	return res;
 }
+#endif /* NO_TUI */
 
 int run_tests(opts_t *opts)
 {
@@ -923,6 +930,7 @@ static int cleanup_test_files(const char *path)
 	return count;
 }
 
+#ifndef NO_TUI
 /* Open dashboard in browser via local HTTP server (needed for fetch to work) */
 static int open_dashboard(void)
 {
@@ -1452,9 +1460,10 @@ static int run_interactive(opts_t *opts)
 	/* Cleanup */
 	tty_cleanup();
 	tui_state_cleanup(&state);
-	
+
 	return result;
 }
+#endif /* NO_TUI */
 
 int main(int argc, char **argv)
 {
@@ -1582,7 +1591,12 @@ int main(int argc, char **argv)
 	}
 	/* Interactive mode - launch config menu */
 	if (opts.interactive) {
+#ifndef NO_TUI
 		return run_interactive(&opts);
+#else
+		fprintf(stderr, "ERROR: Interactive mode not available (TUI disabled)\n");
+		return 1;
+#endif
 	}
 
 	if (!opts.path) {
