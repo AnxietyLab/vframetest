@@ -19,9 +19,9 @@
 /* Key codes for special keys */
 typedef enum tty_key_t {
 	TTY_KEY_NONE = 0,
-	
+
 	/* Printable ASCII (32-126) are returned as-is */
-	
+
 	/* Special keys (values > 256 to avoid ASCII conflicts) */
 	TTY_KEY_UP = 256,
 	TTY_KEY_DOWN,
@@ -37,7 +37,7 @@ typedef enum tty_key_t {
 	TTY_KEY_ENTER,
 	TTY_KEY_TAB,
 	TTY_KEY_BACKSPACE,
-	
+
 	/* Function keys */
 	TTY_KEY_F1,
 	TTY_KEY_F2,
@@ -51,12 +51,12 @@ typedef enum tty_key_t {
 	TTY_KEY_F10,
 	TTY_KEY_F11,
 	TTY_KEY_F12,
-	
+
 	/* Control combinations */
 	TTY_KEY_CTRL_C,
 	TTY_KEY_CTRL_D,
 	TTY_KEY_CTRL_Z,
-	
+
 	/* Error/special states */
 	TTY_KEY_ERROR = -1,
 	TTY_KEY_EOF = -2

@@ -34,9 +34,7 @@
 #include "tui.h"
 
 /* Sparkline characters representing 8 intensity levels */
-const char *TUI_SPARK_CHARS[8] = {
-	"▁", "▂", "▃", "▄", "▅", "▆", "▇", "█"
-};
+const char *TUI_SPARK_CHARS[8] = { "▁", "▂", "▃", "▄", "▅", "▆", "▇", "█" };
 
 /* Static flag to track initialization state */
 static int tui_initialized = 0;
@@ -117,9 +115,9 @@ void tui_cleanup(void)
 }
 
 void tui_metrics_init(tui_metrics_t *metrics, const char *profile_name,
-                      const char *target_path, size_t thread_count,
-                      size_t frames_total, const char *test_type,
-                      filesystem_type_t fs_type)
+		      const char *target_path, size_t thread_count,
+		      size_t frames_total, const char *test_type,
+		      filesystem_type_t fs_type)
 {
 	if (!metrics)
 		return;
@@ -138,7 +136,7 @@ void tui_metrics_init(tui_metrics_t *metrics, const char *profile_name,
 }
 
 void tui_metrics_update(tui_metrics_t *metrics, uint64_t frame_time_ns,
-                        uint64_t bytes, io_mode_t io_mode, int success)
+			uint64_t bytes, io_mode_t io_mode, int success)
 {
 	if (!metrics)
 		return;
@@ -167,19 +165,22 @@ void tui_metrics_update(tui_metrics_t *metrics, uint64_t frame_time_ns,
 
 	/* Add to sparkline history (circular buffer) */
 	metrics->sparkline_history[metrics->sparkline_idx] = frame_time_ns;
-	metrics->sparkline_idx = (metrics->sparkline_idx + 1) % TUI_SPARKLINE_SIZE;
+	metrics->sparkline_idx =
+		(metrics->sparkline_idx + 1) % TUI_SPARKLINE_SIZE;
 
 	/* Add to percentile buffer (circular buffer for running percentiles) */
 	if (frame_time_ns > 0) {
-		metrics->percentile_buffer[metrics->percentile_idx] = frame_time_ns;
-		metrics->percentile_idx = (metrics->percentile_idx + 1) % TUI_PERCENTILE_BUFFER_SIZE;
+		metrics->percentile_buffer[metrics->percentile_idx] =
+			frame_time_ns;
+		metrics->percentile_idx = (metrics->percentile_idx + 1) %
+					  TUI_PERCENTILE_BUFFER_SIZE;
 		metrics->percentile_count++;
 	}
 }
 
 tui_percentiles_t tui_calculate_percentiles(uint64_t *times, size_t count)
 {
-	tui_percentiles_t result = {0};
+	tui_percentiles_t result = { 0 };
 
 	if (!times || count == 0)
 		return result;
@@ -196,7 +197,8 @@ tui_percentiles_t tui_calculate_percentiles(uint64_t *times, size_t count)
 	result.p50 = sorted[(size_t)(count * 0.50)];
 	result.p95 = sorted[(size_t)(count * 0.95)];
 	result.p99 = sorted[(size_t)(count * 0.99)];
-	result.p999 = sorted[count > 1000 ? (size_t)(count * 0.999) : count - 1];
+	result.p999 =
+		sorted[count > 1000 ? (size_t)(count * 0.999) : count - 1];
 
 	free(sorted);
 	return result;
@@ -209,8 +211,10 @@ static void calculate_running_percentiles(tui_metrics_t *metrics)
 		return;
 
 	/* Determine how many samples we have in the buffer */
-	size_t count = (metrics->percentile_count < TUI_PERCENTILE_BUFFER_SIZE) ?
-	               metrics->percentile_count : TUI_PERCENTILE_BUFFER_SIZE;
+	size_t count =
+		(metrics->percentile_count < TUI_PERCENTILE_BUFFER_SIZE) ?
+			metrics->percentile_count :
+			TUI_PERCENTILE_BUFFER_SIZE;
 
 	if (count < 2)
 		return;
@@ -303,14 +307,17 @@ void tui_render(tui_metrics_t *metrics)
 	double iops = 0.0;
 
 	if (elapsed_sec > 0.001) {
-		throughput_mibs = ((double)metrics->bytes_written / (1024.0 * 1024.0)) / elapsed_sec;
+		throughput_mibs =
+			((double)metrics->bytes_written / (1024.0 * 1024.0)) /
+			elapsed_sec;
 		iops = (double)metrics->frames_completed / elapsed_sec;
 	}
 
 	/* Calculate progress */
 	int percent = 0;
 	if (metrics->frames_total > 0) {
-		percent = (int)((metrics->frames_completed * 100) / metrics->frames_total);
+		percent = (int)((metrics->frames_completed * 100) /
+				metrics->frames_total);
 	}
 
 	/* Format latencies */
@@ -321,47 +328,56 @@ void tui_render(tui_metrics_t *metrics)
 
 	/* Row 1: Top border */
 	printf("\xe2\x94\x8c"); /* ┌ */
-	for (int i = 0; i < W; i++) printf("\xe2\x94\x80"); /* ─ */
+	for (int i = 0; i < W; i++)
+		printf("\xe2\x94\x80"); /* ─ */
 	printf("\xe2\x94\x90\n"); /* ┐ */
 
 	/* Row 2: Title */
 	len = snprintf(line, sizeof(line), "  vframetest v%d.%d.%d - %s test",
-	               MAJOR, MINOR, PATCH, metrics->test_type);
+		       MAJOR, MINOR, PATCH, metrics->test_type);
 	printf("\xe2\x94\x82%s", line); /* │ */
 	print_pad(W - len);
 	printf("\xe2\x94\x82\n"); /* │ */
 
 	/* Row 3: Separator */
 	printf("\xe2\x94\x9c"); /* ├ */
-	for (int i = 0; i < W; i++) printf("\xe2\x94\x80");
+	for (int i = 0; i < W; i++)
+		printf("\xe2\x94\x80");
 	printf("\xe2\x94\xa4\n"); /* ┤ */
 
 	/* Row 4: Profile info */
-	len = snprintf(line, sizeof(line), "  Profile: %-12s  Threads: %-2zu  FS: %s",
-	               metrics->profile_name, metrics->thread_count, get_fs_type_str(metrics->fs_type));
+	len = snprintf(line, sizeof(line),
+		       "  Profile: %-12s  Threads: %-2zu  FS: %s",
+		       metrics->profile_name, metrics->thread_count,
+		       get_fs_type_str(metrics->fs_type));
 	printf("\xe2\x94\x82%s", line);
 	print_pad(W - len);
 	printf("\xe2\x94\x82\n");
 
 	/* Row 5: Target path */
-	len = snprintf(line, sizeof(line), "  Target: %.46s", metrics->target_path);
+	len = snprintf(line, sizeof(line), "  Target: %.46s",
+		       metrics->target_path);
 	printf("\xe2\x94\x82%s", line);
 	print_pad(W - len);
 	printf("\xe2\x94\x82\n");
 
 	/* Row 6: Separator */
 	printf("\xe2\x94\x9c");
-	for (int i = 0; i < W; i++) printf("\xe2\x94\x80");
+	for (int i = 0; i < W; i++)
+		printf("\xe2\x94\x80");
 	printf("\xe2\x94\xa4\n");
 
 	/* Row 7: Progress bar - careful with UTF-8 block chars */
 	int bar_width = 30;
 	int filled = (metrics->frames_total > 0) ?
-	             (int)((metrics->frames_completed * bar_width) / metrics->frames_total) : 0;
+			     (int)((metrics->frames_completed * bar_width) /
+				   metrics->frames_total) :
+			     0;
 	printf("\xe2\x94\x82  Progress: [");
 	for (int i = 0; i < bar_width; i++) {
 		if (i < filled)
-			printf("%s\xe2\x96\x88%s", TUI_GREEN, TUI_RESET); /* █ */
+			printf("%s\xe2\x96\x88%s", TUI_GREEN,
+			       TUI_RESET); /* █ */
 		else
 			printf("\xe2\x96\x91"); /* ░ */
 	}
@@ -372,39 +388,44 @@ void tui_render(tui_metrics_t *metrics)
 
 	/* Row 8: Frame count */
 	len = snprintf(line, sizeof(line), "  Frames: %zu / %zu",
-	               metrics->frames_completed, metrics->frames_total);
+		       metrics->frames_completed, metrics->frames_total);
 	printf("\xe2\x94\x82%s", line);
 	print_pad(W - len);
 	printf("\xe2\x94\x82\n");
 
 	/* Row 9: Separator */
 	printf("\xe2\x94\x9c");
-	for (int i = 0; i < W; i++) printf("\xe2\x94\x80");
+	for (int i = 0; i < W; i++)
+		printf("\xe2\x94\x80");
 	printf("\xe2\x94\xa4\n");
 
 	/* Row 10: Throughput */
-	len = snprintf(line, sizeof(line), "  Throughput: %.1f MiB/s   IOPS: %.0f",
-	               throughput_mibs, iops);
+	len = snprintf(line, sizeof(line),
+		       "  Throughput: %.1f MiB/s   IOPS: %.0f", throughput_mibs,
+		       iops);
 	printf("\xe2\x94\x82  Throughput: %s%.1f MiB/s%s   IOPS: %.0f",
 	       TUI_CYAN, throughput_mibs, TUI_RESET, iops);
 	print_pad(W - len);
 	printf("\xe2\x94\x82\n");
 
 	/* Row 11: Latency P50/P99 */
-	len = snprintf(line, sizeof(line), "  Latency:    P50: %-8s  P99: %-8s", lat_p50, lat_p99);
+	len = snprintf(line, sizeof(line), "  Latency:    P50: %-8s  P99: %-8s",
+		       lat_p50, lat_p99);
 	printf("\xe2\x94\x82%s", line);
 	print_pad(W - len);
 	printf("\xe2\x94\x82\n");
 
 	/* Row 12: Latency Min/Max */
-	len = snprintf(line, sizeof(line), "              Min: %-8s  Max: %-8s", lat_min, lat_max);
+	len = snprintf(line, sizeof(line), "              Min: %-8s  Max: %-8s",
+		       lat_min, lat_max);
 	printf("\xe2\x94\x82%s", line);
 	print_pad(W - len);
 	printf("\xe2\x94\x82\n");
 
 	/* Row 13: Separator */
 	printf("\xe2\x94\x9c");
-	for (int i = 0; i < W; i++) printf("\xe2\x94\x80");
+	for (int i = 0; i < W; i++)
+		printf("\xe2\x94\x80");
 	printf("\xe2\x94\xa4\n");
 
 	/* Row 14: Sparkline trend - count display columns not bytes */
@@ -420,8 +441,10 @@ void tui_render(tui_metrics_t *metrics)
 			uint64_t max_v = metrics->latency_max_ns;
 			int level = 0;
 			if (max_v > min_v && val >= min_v) {
-				level = (int)(((val - min_v) * 7) / (max_v - min_v));
-				if (level > 7) level = 7;
+				level = (int)(((val - min_v) * 7) /
+					      (max_v - min_v));
+				if (level > 7)
+					level = 7;
 			}
 			printf("%s", TUI_SPARK_CHARS[level]);
 		}
@@ -433,30 +456,32 @@ void tui_render(tui_metrics_t *metrics)
 
 	/* Row 15: Separator */
 	printf("\xe2\x94\x9c");
-	for (int i = 0; i < W; i++) printf("\xe2\x94\x80");
+	for (int i = 0; i < W; i++)
+		printf("\xe2\x94\x80");
 	printf("\xe2\x94\xa4\n");
 
 	/* Row 16: Status - ✓ and ✗ are each 1 display column */
 	len = snprintf(line, sizeof(line), "  X %zu ok   X %zu fail   I/O: %s",
-	               metrics->frames_succeeded, metrics->frames_failed,
-	               get_io_mode_str(metrics->current_io_mode));
+		       metrics->frames_succeeded, metrics->frames_failed,
+		       get_io_mode_str(metrics->current_io_mode));
 	printf("\xe2\x94\x82  %s\xe2\x9c\x93%s %zu ok   %s\xe2\x9c\x97%s %zu fail   I/O: %s",
-	       TUI_GREEN, TUI_RESET, metrics->frames_succeeded,
-	       TUI_RED, TUI_RESET, metrics->frames_failed,
+	       TUI_GREEN, TUI_RESET, metrics->frames_succeeded, TUI_RED,
+	       TUI_RESET, metrics->frames_failed,
 	       get_io_mode_str(metrics->current_io_mode));
 	print_pad(W - len);
 	printf("\xe2\x94\x82\n");
 
 	/* Row 17: Bottom border */
 	printf("\xe2\x94\x94"); /* └ */
-	for (int i = 0; i < W; i++) printf("\xe2\x94\x80");
+	for (int i = 0; i < W; i++)
+		printf("\xe2\x94\x80");
 	printf("\xe2\x94\x98\n"); /* ┘ */
 
 	fflush(stdout);
 }
 
 void tui_render_summary(const tui_metrics_t *metrics,
-                        const test_result_t *result)
+			const test_result_t *result)
 {
 	char lat_min[16], lat_max[16], lat_avg[16];
 	char line[256];
@@ -475,7 +500,9 @@ void tui_render_summary(const tui_metrics_t *metrics,
 	double iops_val = 0.0;
 
 	if (elapsed_sec > 0.001) {
-		throughput = ((double)result->bytes_written / (1024.0 * 1024.0)) / elapsed_sec;
+		throughput =
+			((double)result->bytes_written / (1024.0 * 1024.0)) /
+			elapsed_sec;
 		iops_val = (double)result->frames_written / elapsed_sec;
 	}
 
@@ -487,11 +514,14 @@ void tui_render_summary(const tui_metrics_t *metrics,
 	if (result->completion && result->frames_written > 0) {
 		uint64_t total = 0;
 		for (size_t i = 0; i < result->frames_written; i++) {
-			uint64_t frame_dur = result->completion[i].frame - result->completion[i].start;
+			uint64_t frame_dur = result->completion[i].frame -
+					     result->completion[i].start;
 			if (frame_dur > 0) {
 				total += frame_dur;
-				if (frame_dur < min_ns) min_ns = frame_dur;
-				if (frame_dur > max_ns) max_ns = frame_dur;
+				if (frame_dur < min_ns)
+					min_ns = frame_dur;
+				if (frame_dur > max_ns)
+					max_ns = frame_dur;
 			}
 		}
 		avg_ns = total / result->frames_written;
@@ -509,11 +539,13 @@ void tui_render_summary(const tui_metrics_t *metrics,
 
 	/* Row 1: Top border */
 	printf("\xe2\x94\x8c");
-	for (int i = 0; i < W; i++) printf("\xe2\x94\x80");
+	for (int i = 0; i < W; i++)
+		printf("\xe2\x94\x80");
 	printf("\xe2\x94\x90\n");
 
 	/* Row 2: Title with checkmark - center "✓ Test Complete" (15 display cols) */
-	int title_len = 15; /* "✓ Test Complete" = 1 + 1 + 13 = 15 display cols */
+	int title_len =
+		15; /* "✓ Test Complete" = 1 + 1 + 13 = 15 display cols */
 	int left_pad = (W - title_len) / 2;
 	int right_pad = W - title_len - left_pad;
 	printf("\xe2\x94\x82");
@@ -524,76 +556,85 @@ void tui_render_summary(const tui_metrics_t *metrics,
 
 	/* Row 3: Separator */
 	printf("\xe2\x94\x9c");
-	for (int i = 0; i < W; i++) printf("\xe2\x94\x80");
+	for (int i = 0; i < W; i++)
+		printf("\xe2\x94\x80");
 	printf("\xe2\x94\xa4\n");
 
 	/* Row 4: Profile */
 	len = snprintf(line, sizeof(line), "  Profile: %-12s   Test: %s",
-	               metrics->profile_name, metrics->test_type);
+		       metrics->profile_name, metrics->test_type);
 	printf("\xe2\x94\x82%s", line);
 	print_pad(W - len);
 	printf("\xe2\x94\x82\n");
 
 	/* Row 5: Target */
-	len = snprintf(line, sizeof(line), "  Target: %.46s", metrics->target_path);
+	len = snprintf(line, sizeof(line), "  Target: %.46s",
+		       metrics->target_path);
 	printf("\xe2\x94\x82%s", line);
 	print_pad(W - len);
 	printf("\xe2\x94\x82\n");
 
 	/* Row 6: Separator */
 	printf("\xe2\x94\x9c");
-	for (int i = 0; i < W; i++) printf("\xe2\x94\x80");
+	for (int i = 0; i < W; i++)
+		printf("\xe2\x94\x80");
 	printf("\xe2\x94\xa4\n");
 
 	/* Row 7: Frames and Time */
 	len = snprintf(line, sizeof(line), "  Frames: %llu   Time: %.2f sec",
-	               (unsigned long long)result->frames_written, elapsed_sec);
+		       (unsigned long long)result->frames_written, elapsed_sec);
 	printf("\xe2\x94\x82%s", line);
 	print_pad(W - len);
 	printf("\xe2\x94\x82\n");
 
 	/* Row 8: Throughput */
-	len = snprintf(line, sizeof(line), "  Throughput: %.1f MiB/s   IOPS: %.0f",
-	               throughput, iops_val);
+	len = snprintf(line, sizeof(line),
+		       "  Throughput: %.1f MiB/s   IOPS: %.0f", throughput,
+		       iops_val);
 	printf("\xe2\x94\x82%s", line);
 	print_pad(W - len);
 	printf("\xe2\x94\x82\n");
 
 	/* Row 9: Success */
-	len = snprintf(line, sizeof(line), "  Success: %.1f%%", result->success_rate_percent);
+	len = snprintf(line, sizeof(line), "  Success: %.1f%%",
+		       result->success_rate_percent);
 	printf("\xe2\x94\x82%s", line);
 	print_pad(W - len);
 	printf("\xe2\x94\x82\n");
 
 	/* Row 10: Separator */
 	printf("\xe2\x94\x9c");
-	for (int i = 0; i < W; i++) printf("\xe2\x94\x80");
+	for (int i = 0; i < W; i++)
+		printf("\xe2\x94\x80");
 	printf("\xe2\x94\xa4\n");
 
 	/* Row 11: Latency */
-	len = snprintf(line, sizeof(line), "  Latency: Min: %-8s Avg: %-8s Max: %-8s",
-	               lat_min, lat_avg, lat_max);
+	len = snprintf(line, sizeof(line),
+		       "  Latency: Min: %-8s Avg: %-8s Max: %-8s", lat_min,
+		       lat_avg, lat_max);
 	printf("\xe2\x94\x82%s", line);
 	print_pad(W - len);
 	printf("\xe2\x94\x82\n");
 
 	/* Row 12: I/O Mode */
-	len = snprintf(line, sizeof(line), "  I/O Mode: Direct: %d   Buffered: %d",
-	               result->frames_direct_io, result->frames_buffered_io);
+	len = snprintf(line, sizeof(line),
+		       "  I/O Mode: Direct: %d   Buffered: %d",
+		       result->frames_direct_io, result->frames_buffered_io);
 	printf("\xe2\x94\x82%s", line);
 	print_pad(W - len);
 	printf("\xe2\x94\x82\n");
 
 	/* Row 13: Filesystem */
 	len = snprintf(line, sizeof(line), "  Filesystem: %s",
-	               get_fs_type_str(result->filesystem_type));
+		       get_fs_type_str(result->filesystem_type));
 	printf("\xe2\x94\x82%s", line);
 	print_pad(W - len);
 	printf("\xe2\x94\x82\n");
 
 	/* Row 14: Bottom border */
 	printf("\xe2\x94\x94");
-	for (int i = 0; i < W; i++) printf("\xe2\x94\x80");
+	for (int i = 0; i < W; i++)
+		printf("\xe2\x94\x80");
 	printf("\xe2\x94\x98\n");
 	printf("\n");
 

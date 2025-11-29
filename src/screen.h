@@ -10,7 +10,7 @@
 
 #include <stddef.h>
 
-#define SCREEN_MAX_WIDTH  256
+#define SCREEN_MAX_WIDTH 256
 #define SCREEN_MAX_HEIGHT 64
 
 /* Color definitions */
@@ -36,11 +36,11 @@ typedef enum {
 
 /* Text attributes */
 typedef enum {
-	ATTR_NONE      = 0,
-	ATTR_BOLD      = (1 << 0),
-	ATTR_DIM       = (1 << 1),
+	ATTR_NONE = 0,
+	ATTR_BOLD = (1 << 0),
+	ATTR_DIM = (1 << 1),
 	ATTR_UNDERLINE = (1 << 2),
-	ATTR_REVERSE   = (1 << 3)
+	ATTR_REVERSE = (1 << 3)
 } screen_attr_t;
 
 /* Color attribute packed into single byte: fg(4 bits) | bg(4 bits) */

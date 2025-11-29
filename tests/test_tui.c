@@ -82,7 +82,7 @@ int test_metrics_init(void **state)
 	(void)state;
 
 	tui_metrics_init(&metrics, "FULLHD-24bit", "/tmp/test", 4, 1000,
-	                 "write", FILESYSTEM_LOCAL);
+			 "write", FILESYSTEM_LOCAL);
 
 	TEST_ASSERT_EQ_STR(metrics.profile_name, "FULLHD-24bit");
 	TEST_ASSERT_EQ_STR(metrics.target_path, "/tmp/test");
@@ -103,7 +103,7 @@ int test_metrics_update(void **state)
 	(void)state;
 
 	tui_metrics_init(&metrics, "HD", "/tmp/test", 2, 100, "write",
-	                 FILESYSTEM_LOCAL);
+			 FILESYSTEM_LOCAL);
 
 	/* Simulate a few frame completions */
 	tui_metrics_update(&metrics, 5000000, 1000000, IO_MODE_DIRECT, 1);
@@ -128,7 +128,7 @@ int test_metrics_failures(void **state)
 	(void)state;
 
 	tui_metrics_init(&metrics, "HD", "/tmp/test", 2, 100, "write",
-	                 FILESYSTEM_LOCAL);
+			 FILESYSTEM_LOCAL);
 
 	tui_metrics_update(&metrics, 5000000, 1000000, IO_MODE_DIRECT, 1);
 	tui_metrics_update(&metrics, 0, 0, IO_MODE_UNKNOWN, 0); /* failure */

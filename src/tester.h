@@ -54,8 +54,8 @@ typedef enum test_files_t {
 
 /* Progress callback for TUI updates */
 typedef void (*tester_progress_cb)(void *ctx, size_t frames_done,
-                                   size_t bytes_written, uint64_t frame_time_ns,
-                                   io_mode_t io_mode, int success);
+				   size_t bytes_written, uint64_t frame_time_ns,
+				   io_mode_t io_mode, int success);
 
 test_result_t tester_run_write(const platform_t *platform, const char *path,
 			       frame_t *frame, size_t start_frame,
@@ -67,15 +67,15 @@ test_result_t tester_run_read(const platform_t *platform, const char *path,
 
 /* Versions with progress callback for TUI */
 test_result_t tester_run_write_cb(const platform_t *platform, const char *path,
-                                  frame_t *frame, size_t start_frame,
-                                  size_t frames, size_t fps, test_mode_t mode,
-                                  test_files_t files, tester_progress_cb cb,
-                                  void *cb_ctx);
+				  frame_t *frame, size_t start_frame,
+				  size_t frames, size_t fps, test_mode_t mode,
+				  test_files_t files, tester_progress_cb cb,
+				  void *cb_ctx);
 test_result_t tester_run_read_cb(const platform_t *platform, const char *path,
-                                 frame_t *frame, size_t start_frame,
-                                 size_t frames, size_t fps, test_mode_t mode,
-                                 test_files_t files, tester_progress_cb cb,
-                                 void *cb_ctx);
+				 frame_t *frame, size_t start_frame,
+				 size_t frames, size_t fps, test_mode_t mode,
+				 test_files_t files, tester_progress_cb cb,
+				 void *cb_ctx);
 frame_t *tester_get_frame_read(const platform_t *platform, const char *path,
 			       size_t header_size);
 
@@ -107,7 +107,8 @@ static inline int test_result_aggregate(test_result_t *dst,
 
 	frm = (dst->frames_written + src->frames_written);
 	if (frm && src->frames_written && src->completion) {
-		tmp = (test_completion_t *)realloc(dst->completion, sizeof(*tmp) * frm);
+		tmp = (test_completion_t *)realloc(dst->completion,
+						   sizeof(*tmp) * frm);
 		if (tmp) {
 			memcpy(tmp + dst->frames_written, src->completion,
 			       sizeof(*tmp) * src->frames_written);
@@ -125,8 +126,9 @@ static inline int test_result_aggregate(test_result_t *dst,
 
 	/* Recalculate success rate after aggregation */
 	if (dst->frames_succeeded + dst->frames_failed > 0) {
-		dst->success_rate_percent = (dst->frames_succeeded * 100.0) /
-		                             (dst->frames_succeeded + dst->frames_failed);
+		dst->success_rate_percent =
+			(dst->frames_succeeded * 100.0) /
+			(dst->frames_succeeded + dst->frames_failed);
 	}
 
 	/* Phase 2: Aggregate I/O fallback tracking */
@@ -137,7 +139,8 @@ static inline int test_result_aggregate(test_result_t *dst,
 	/* Recalculate Direct I/O success rate after aggregation */
 	int total_frames = dst->frames_direct_io + dst->frames_buffered_io;
 	if (total_frames > 0) {
-		dst->direct_io_success_rate = (dst->frames_direct_io * 100.0) / total_frames;
+		dst->direct_io_success_rate =
+			(dst->frames_direct_io * 100.0) / total_frames;
 	}
 
 	return 0;

@@ -35,30 +35,30 @@
 #define TUI_PERCENTILE_BUFFER_SIZE 512
 
 /* ANSI escape codes for colors and formatting */
-#define TUI_RESET       "\033[0m"
-#define TUI_BOLD        "\033[1m"
-#define TUI_DIM         "\033[2m"
-#define TUI_GREEN       "\033[32m"
-#define TUI_YELLOW      "\033[33m"
-#define TUI_RED         "\033[31m"
-#define TUI_CYAN        "\033[36m"
-#define TUI_WHITE       "\033[37m"
-#define TUI_BG_BLACK    "\033[40m"
+#define TUI_RESET "\033[0m"
+#define TUI_BOLD "\033[1m"
+#define TUI_DIM "\033[2m"
+#define TUI_GREEN "\033[32m"
+#define TUI_YELLOW "\033[33m"
+#define TUI_RED "\033[31m"
+#define TUI_CYAN "\033[36m"
+#define TUI_WHITE "\033[37m"
+#define TUI_BG_BLACK "\033[40m"
 
 /* Cursor control */
 #define TUI_CLEAR_SCREEN "\033[2J"
-#define TUI_HOME         "\033[H"
-#define TUI_HIDE_CURSOR  "\033[?25l"
-#define TUI_SHOW_CURSOR  "\033[?25h"
-#define TUI_CLEAR_LINE   "\033[2K"
+#define TUI_HOME "\033[H"
+#define TUI_HIDE_CURSOR "\033[?25l"
+#define TUI_SHOW_CURSOR "\033[?25h"
+#define TUI_CLEAR_LINE "\033[2K"
 
 /* Box drawing characters (Unicode) */
 #define TUI_BOX_TL "┌"
 #define TUI_BOX_TR "┐"
 #define TUI_BOX_BL "└"
 #define TUI_BOX_BR "┘"
-#define TUI_BOX_H  "─"
-#define TUI_BOX_V  "│"
+#define TUI_BOX_H "─"
+#define TUI_BOX_V "│"
 #define TUI_BOX_LT "├"
 #define TUI_BOX_RT "┤"
 
@@ -101,7 +101,7 @@ typedef struct tui_metrics_t {
 	/* Percentile calculation buffer (circular, stores recent frame times) */
 	uint64_t percentile_buffer[TUI_PERCENTILE_BUFFER_SIZE];
 	size_t percentile_idx;
-	size_t percentile_count;  /* Total samples added (for knowing if buffer is full) */
+	size_t percentile_count; /* Total samples added (for knowing if buffer is full) */
 
 	/* I/O mode tracking */
 	int frames_direct_io;
@@ -112,7 +112,7 @@ typedef struct tui_metrics_t {
 	const char *profile_name;
 	const char *target_path;
 	size_t thread_count;
-	const char *test_type;  /* "write" or "read" */
+	const char *test_type; /* "write" or "read" */
 	filesystem_type_t fs_type;
 } tui_metrics_t;
 
@@ -141,15 +141,15 @@ void tui_cleanup(void);
  * Initialize metrics structure with test configuration
  */
 void tui_metrics_init(tui_metrics_t *metrics, const char *profile_name,
-                      const char *target_path, size_t thread_count,
-                      size_t frames_total, const char *test_type,
-                      filesystem_type_t fs_type);
+		      const char *target_path, size_t thread_count,
+		      size_t frames_total, const char *test_type,
+		      filesystem_type_t fs_type);
 
 /*
  * Update metrics with a completed frame
  */
 void tui_metrics_update(tui_metrics_t *metrics, uint64_t frame_time_ns,
-                        uint64_t bytes, io_mode_t io_mode, int success);
+			uint64_t bytes, io_mode_t io_mode, int success);
 
 /*
  * Calculate percentiles from completion time array
@@ -167,7 +167,7 @@ void tui_render(tui_metrics_t *metrics);
  * Render final summary after test completion
  */
 void tui_render_summary(const tui_metrics_t *metrics,
-                        const test_result_t *result);
+			const test_result_t *result);
 
 /*
  * Check if terminal supports TUI mode

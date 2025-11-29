@@ -175,7 +175,7 @@ int test_histogram_print(void)
 
 	print_histogram(&res);
 
-	res.completion = &compl ;
+	res.completion = &compl;
 	print_histogram(&res);
 
 	test_ignore_printf(0);

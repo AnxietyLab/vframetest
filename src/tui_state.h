@@ -21,15 +21,15 @@
 
 /* Default and limits for frame history */
 #define TUI_HISTORY_DEFAULT 10000
-#define TUI_HISTORY_MIN     100
-#define TUI_HISTORY_MAX     1000000
+#define TUI_HISTORY_MIN 100
+#define TUI_HISTORY_MAX 1000000
 
 /* Views */
 typedef enum tui_view_t {
 	TUI_VIEW_DASHBOARD = 0,
 	TUI_VIEW_HISTORY,
 	TUI_VIEW_LATENCY,
-	TUI_VIEW_CONFIG,       /* Test configuration/start menu */
+	TUI_VIEW_CONFIG, /* Test configuration/start menu */
 	TUI_VIEW_COUNT
 } tui_view_t;
 
@@ -88,20 +88,20 @@ typedef struct tui_test_config_t {
 	size_t custom_bpp;
 	size_t threads;
 	size_t frames;
-	size_t fps;              /* 0 = unlimited */
+	size_t fps; /* 0 = unlimited */
 	tui_access_order_t access_order;
 	size_t header_size;
-	int auto_cleanup;        /* 1 = auto-cleanup after test, 0 = prompt */
-	int open_dashboard;      /* 1 = open dashboard in browser after test */
+	int auto_cleanup; /* 1 = auto-cleanup after test, 0 = prompt */
+	int open_dashboard; /* 1 = open dashboard in browser after test */
 } tui_test_config_t;
 
 /* Run states */
 typedef enum tui_run_state_t {
-	TUI_STATE_IDLE,        /* Before test starts - in config menu */
-	TUI_STATE_RUNNING,     /* Test is executing */
-	TUI_STATE_PAUSED,      /* Test is paused */
-	TUI_STATE_COMPLETED,   /* Test finished */
-	TUI_STATE_QUITTING     /* User requested quit */
+	TUI_STATE_IDLE, /* Before test starts - in config menu */
+	TUI_STATE_RUNNING, /* Test is executing */
+	TUI_STATE_PAUSED, /* Test is paused */
+	TUI_STATE_COMPLETED, /* Test finished */
+	TUI_STATE_QUITTING /* User requested quit */
 } tui_run_state_t;
 
 /* Single frame record in history */
@@ -119,8 +119,8 @@ typedef struct tui_frame_record_t {
 typedef struct tui_history_t {
 	tui_frame_record_t *frames;
 	size_t capacity;
-	size_t head;        /* Next write position */
-	size_t count;       /* Number of frames stored */
+	size_t head; /* Next write position */
+	size_t count; /* Number of frames stored */
 	pthread_mutex_t mutex;
 } tui_history_t;
 
@@ -130,39 +130,39 @@ typedef struct tui_app_state_t {
 	tui_view_t current_view;
 	tui_run_state_t run_state;
 	int show_help;
-	
+
 	/* Terminal dimensions */
 	int term_width;
 	int term_height;
-	
+
 	/* Test configuration (Config view) */
 	tui_test_config_t config;
 	tui_config_field_t selected_field;
-	int editing_text;              /* Currently editing a text field */
-	char edit_buffer[512];         /* Buffer for text editing */
-	size_t edit_cursor;            /* Cursor position in edit buffer */
-	
+	int editing_text; /* Currently editing a text field */
+	char edit_buffer[512]; /* Buffer for text editing */
+	size_t edit_cursor; /* Cursor position in edit buffer */
+
 	/* History view state */
 	size_t history_scroll_pos;
 	size_t history_selected;
 	int history_filter_failures;
 	int history_show_details;
-	
+
 	/* Latency view state */
 	int latency_zoom;
 	int latency_pan_offset;
-	
+
 	/* Frame history */
 	tui_history_t history;
-	
+
 	/* Pause synchronization */
 	volatile int paused;
 	pthread_mutex_t pause_mutex;
 	pthread_cond_t pause_cond;
-	
+
 	/* Dirty flag for rendering */
 	int needs_redraw;
-	
+
 	/* Flag to signal test should start */
 	volatile int start_test_requested;
 } tui_app_state_t;
